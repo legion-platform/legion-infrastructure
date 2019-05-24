@@ -10,7 +10,7 @@ pipeline {
         param_debug_run = "${params.DebugRun}"
         //Job parameters
         sharedLibPath = "pipelines/legionPipeline.groovy"
-        ansibleHome =  "/opt/legion/deploy/ansible"
+        ansibleHome =  "/opt/legion/ansible"
         ansibleVerbose = '-v'
         helmLocalSrc = 'false'
     }
