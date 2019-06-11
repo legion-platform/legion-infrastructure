@@ -8,7 +8,7 @@ defaultScopes: "https://www.googleapis.com/auth/logging.write,https://www.google
 
 image:
   repository: imduffy15/k8s-gke-service-account-assigner
-  tag: latest
+  tag: "v0.0.2"
   pullPolicy: IfNotPresent
 
 nameOverride: ""
