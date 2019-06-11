@@ -2,17 +2,17 @@
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: {{ template "k8s-gke-service-account-assigner.fullname" . }}
+  name: {{ template "k8s-gke-saa.fullname" . }}
   namespace: kube-system
   labels:
-    app: {{ template "k8s-gke-service-account-assigner.fullname" . }}
+    app: {{ template "k8s-gke-saa.fullname" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     release: "{{ .Release.Name }}"
 spec:
   template:
     metadata:
       labels:
-        app: {{ template "k8s-gke-service-account-assigner.fullname" . }}
+        app: {{ template "k8s-gke-saa.fullname" . }}
 {{- with .Values.podLabels }}
 {{ toYaml . | indent 8 }}
 {{- end }}
@@ -22,10 +22,10 @@ spec:
 {{- end }}
     spec:
       hostNetwork: true
-      serviceAccountName: {{ template "k8s-gke-service-account-assigner.serviceAccountName" . }}
+      serviceAccountName: {{ template "k8s-gke-saa.serviceAccountName" . }}
       containers:
         - image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-          name: {{ template "k8s-gke-service-account-assigner.fullname" . }}
+          name: {{ template "k8s-gke-saa.fullname" . }}
           args:
             - "--iptables=true"
             - "--host-ip=$(HOST_IP)"
