@@ -329,3 +329,32 @@ resource "helm_release" "monitoring" {
       "${data.template_file.monitoring_values.rendered}"
     ]
 }
+
+########################################################
+# k8s GKE Service Account Assigner
+########################################################
+data "template_file" "gke_sa_assigner_values" {
+  template = "${file("${path.module}/templates/gke_sa_assigner.yaml")}"
+  vars = {
+    default_scopes = "${var.gke_sa_assigner_default_scopes}"
+    default_sa     = "${var.gke_sa_assigner_default_sa}"
+    sa_name        = "${var.gke_sa_assigner_sa_name}"
+    image_repo     = "${var.gke_sa_assigner_image_repo}"
+    image_tag      = "${var.gke_sa_assigner_image_tag}"
+    host_port      = "${var.gke_sa_assigner_host_port}"
+    container_port = "${var.gke_sa_assigner_container_port}"
+    name           = "${var.gke_sa_assigner_name}"
+  }
+}
+
+resource "helm_release" "gke_sa_assigner" {
+    name        = "gke-sa-assigner"
+    chart       = "k8s-gke-service-account-assigner"
+    version     = "${var.legion_infra_version}"
+    repository  = "${data.helm_repository.legion.metadata.0.name}"
+    namespace   = "kube-system"
+
+    values = [
+      "${data.template_file.gke_sa_assigner_values.rendered}"
+    ]
+}

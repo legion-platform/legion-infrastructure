@@ -168,3 +168,39 @@ variable "keycloak_client_secret" {
 variable "keycloak_client_id" {
   description = "keycloak default client Secret"
 }
+########################
+# GKE Service Account Assigner
+########################
+variable "gke_sa_assigner_default_scopes" {
+  default     = "https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append"
+  description = "Default scopes to provide for pods"
+}
+variable "gke_sa_assigner_default_sa" {
+  default     = "default"
+  description = "Default service account to provide for pods"
+}
+variable "gke_sa_assigner_sa_name" {
+  default     = "gke_sa_assigner_sa"
+  description = "Name of k8s Service Account that Assigner pod should use to run"
+}
+variable "gke_sa_assigner_image_repo" {
+  default     = "imduffy15/k8s-gke-service-account-assigner"
+  description = "GKE Service Account Assigner docker repository"
+}
+variable "gke_sa_assigner_image_tag" {
+  default     = "v0.0.2"
+  description = "GKE Service Account Assigner docker image repository"
+}
+variable "gke_sa_assigner_host_port" {
+  default     = "8181"
+  description = "GKE Service Account Assigner host port"
+}
+variable "gke_sa_assigner_container_port" {
+  default     = "8181"
+  description = "GKE Service Account Assigner container port"
+}
+variable "gke_sa_assigner_name" {
+  default     = "gke-sa-assigner"
+  description = "GKE Service Account Assigner name"
+}
+
