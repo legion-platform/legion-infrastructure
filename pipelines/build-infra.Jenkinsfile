@@ -10,7 +10,7 @@ class Globals {
 def chartNames = null
 
 pipeline {
-    agent { label 'ec2builder'}
+    agent { label 'gcbuilder'}
 
     options{
             buildDiscarder(logRotator(numToKeepStr: '35', artifactNumToKeepStr: '35'))

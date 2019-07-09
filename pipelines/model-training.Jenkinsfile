@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'ec2orchestrator'}
+    agent { label 'gcorchestrator'}
 
     environment {
         //Input parameters
