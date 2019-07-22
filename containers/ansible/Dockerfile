@@ -49,6 +49,8 @@ RUN curl -fsSLO https://kubernetes-helm.storage.googleapis.com/helm-${HELM_VERSI
 RUN pip install hiera-py==0.0.1 pyyaml==5.1.1 && \
     gem install hiera hiera-eyaml
 
+COPY tools/hiera_exporter /opt/legion/tools/hiera_exporter
+
 # Deploy Legion
 COPY ansible /opt/legion/ansible
 COPY profiles/profiles_template.yaml /opt/legion/profiles/profiles_template.yaml

@@ -53,46 +53,50 @@ def createGCPCluster() {
     withCredentials([
     file(credentialsId: "${env.gcpCredential}", variable: 'gcpCredential')]) {
         withCredentials([
-        file(credentialsId: "${env.param_cluster_name}-secrets", variable: 'secrets')]) {
-            withAWS(credentials: 'kops') {
-                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                    docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root -v ${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns:/opt/legion/terraform/cluster_dns -v ${WORKSPACE}/legion-cicd/terraform/env_profiles/shared.tfvars:/opt/legion/terraform/env_profiles/shared.tfvars -v ${gitKey}:/root/.ssh/id_rsa ") {
-                        stage('Create GCP resources') {
-                            sh """
-                            set -ex
-                            # Activate service account
-                            gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
-                            """
+        file(credentialsId: "${env.hieraPrivatePKCSKey}", variable: 'PrivatePkcsKey')]) {
+            withCredentials([
+            file(credentialsId: "${env.hieraPublicPKCSKey}", variable: 'PublicPkcsKey')]) {
+                withAWS(credentials: 'kops') {
+                    wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
+                        docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root -v ${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns:/opt/legion/terraform/cluster_dns -v ${WORKSPACE}/legion-cicd/terraform/env_profiles/shared.tfvars:/opt/legion/terraform/env_profiles/shared.tfvars -v ${gitKey}:/root/.ssh/id_rsa") {
+                            stage('Extract Hiera data') {
+                                extractHiera("json")
+                            }
+                            stage('Create GCP resources') {
+                                sh """
+                                set -ex
+                                # Activate service account
+                                gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
+                                """
 
-                            terraformRun("apply", "gke_create", "-var=\"agent_cidr=${env.agentWanIp}/32\"")
+                                terraformRun("apply", "gke_create", "-var=\"agent_cidr=${env.agentWanIp}/32\"")
 
-                            sh """
-                            # Authorize Kube api access
-                            gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${env.param_gcp_zone} --project=${env.param_gcp_project}
-                            """
-                        }
-                        stage('Init HELM') {
-                            terraformRun("apply", "helm_init")
-                            sh """
-                            # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
-                            helm init --client-only
-                            """
-                        }
-                        stage('Create cluster specific private DNS zone') {
-                            sh '''
-                               chmod 600 ~/.ssh/id_rsa
-                               ssh-keygen -p -N "" -m pem -f ~/.ssh/id_rsa
-                               ssh-keyscan git.epam.com >> ~/.ssh/known_hosts
-                            '''
-                            terraformRun("apply", "cluster_dns", "-var=\"zone_type=FORWARDING\" -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\" -var=\"networks_to_add=[\\\"infra-vpc\\\"]\"", "${terraformHome}/cluster_dns", "bucket=${env.param_cluster_name}-tfstate", "${terraformHome}/env_profiles/shared.tfvars")
-                        }
-                        stage('Setup K8S Legion dependencies') {
-
-                            tfExtraVars = "-var=\"legion_infra_version=${env.param_legion_infra_version}\" \
-                            -var=\"legion_helm_repo=${env.param_helm_repo}\" \
-                            -var=\"docker_repo=${env.param_docker_repo}\""
-
-                            terraformRun("apply", "k8s_setup", "${tfExtraVars}")
+                                sh """
+                                # Authorize Kube api access
+                                gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${env.param_gcp_zone} --project=${env.param_gcp_project}
+                                """
+                            }
+                            stage('Init HELM') {
+                                terraformRun("apply", "helm_init")
+                                sh """
+                                # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
+                                helm init --client-only
+                                """
+                            }
+                            stage('Create cluster specific private DNS zone') {
+                                sh '''
+                                chmod 600 ~/.ssh/id_rsa
+                                ssh-keygen -p -N "" -m pem -f ~/.ssh/id_rsa
+                                ssh-keyscan git.epam.com >> ~/.ssh/known_hosts
+                                '''
+                                terraformRun("apply", "cluster_dns", "-var=\"zone_type=FORWARDING\" -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\" -var=\"networks_to_add=[\\\"infra-vpc\\\"]\"", "${terraformHome}/cluster_dns", "bucket=${env.param_cluster_name}-tfstate", "${terraformHome}/env_profiles/shared.tfvars")
+                            }
+                            stage('Setup K8S Legion dependencies') {
+                                tfExtraVars = "-var=\"legion_infra_version=${env.param_legion_infra_version}\" \
+                                -var=\"legion_helm_repo=${env.param_helm_repo}\" \
+                                -var=\"docker_repo=${env.param_docker_repo}\""
+                                terraformRun("apply", "k8s_setup", "${tfExtraVars}")
+                            }
                         }
                     }
                 }
@@ -153,30 +157,36 @@ def deployLegionToGCP() {
     withCredentials([
     file(credentialsId: "${env.gcpCredential}", variable: 'gcpCredential')]) {
         withCredentials([
-        file(credentialsId: "${env.param_cluster_name}-secrets", variable: 'secrets')]) {
-            withAWS(credentials: 'kops') {
-                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                    docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -u root") {
-                        stage('Deploy Legion') {
-                            sh """
-                            set -ex
-                            # Authorize GCP access
-                            gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
+        file(credentialsId: "${env.hieraPrivatePKCSKey}", variable: 'PrivatePkcsKey')]) {
+            withCredentials([
+            file(credentialsId: "${env.hieraPublicPKCSKey}", variable: 'PublicPkcsKey')]) {
+                withAWS(credentials: 'kops') {
+                    wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
+                        docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -u root") {
+                            stage('Extract Hiera data') {
+                                    extractHiera("json")
+                                }
+                            stage('Deploy Legion') {
+                                sh """
+                                set -ex
+                                # Authorize GCP access
+                                gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
 
-                            # Setup Kube api access
-                            gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${env.param_gcp_zone} --project=${env.param_gcp_project}
-                            gcloud container clusters update ${env.param_cluster_name} --zone ${env.param_gcp_zone} --enable-master-authorized-networks --master-authorized-networks "${env.agentWanIp}/32"
+                                # Setup Kube api access
+                                gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${env.param_gcp_zone} --project=${env.param_gcp_project}
+                                gcloud container clusters update ${env.param_cluster_name} --zone ${env.param_gcp_zone} --enable-master-authorized-networks --master-authorized-networks "${env.agentWanIp}/32"
 
-                            # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
-                            helm init --client-only
-                            """
+                                # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
+                                helm init --client-only
+                                """
+                                
+                                tfDeployVars = "-var=\"legion_version=${env.param_legion_version}\" \
+                                -var=\"legion_helm_repo=${env.param_helm_repo}\" \
+                                -var=\"docker_repo=${env.param_docker_repo}\" \
+                                -var=\"model_reference=${commitID}\""
 
-                            tfDeployVars = "-var=\"legion_version=${env.param_legion_version}\" \
-                            -var=\"legion_helm_repo=${env.param_helm_repo}\" \
-                            -var=\"docker_repo=${env.param_docker_repo}\"  \
-                            -var=\"model_reference=${commitID}\""
-
-                            terraformRun("apply", "legion", "${tfDeployVars}")
+                                terraformRun("apply", "legion", "${tfDeployVars}")
+                            }
                         }
                     }
                 }
@@ -186,58 +196,65 @@ def deployLegionToGCP() {
 }
 
 def destroyGcpCluster() {
-  withCredentials([
-  sshUserPrivateKey(credentialsId: "${env.legionCicdGitlabKey}", keyFileVariable: 'gitKey')]) {
     withCredentials([
-    file(credentialsId: "${env.gcpCredential}", variable: 'gcpCredential')]) {
+    sshUserPrivateKey(credentialsId: "${env.legionCicdGitlabKey}", keyFileVariable: 'gitKey')]) {
         withCredentials([
-        file(credentialsId: "${env.param_cluster_name}-secrets", variable: 'secrets')]) {
-            withAWS(credentials: 'kops') {
-                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                    docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root -v ${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns:/opt/legion/terraform/cluster_dns -v ${WORKSPACE}/legion-cicd/terraform/env_profiles/shared.tfvars:/opt/legion/terraform/env_profiles/shared.tfvars -v ${gitKey}:/root/.ssh/id_rsa ") {
-                        stage('Remove Legion cluster if exists') {
-                            sh"""
-                            # Setup GCP credentials
-                            gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
-                            """
-                            cluster_status = sh(script: "gcloud container clusters list --zone ${env.param_gcp_zone}", returnStdout: true)
-                            if (!cluster_status.contains("${env.param_cluster_name}")) {
-                                currentBuild.result = 'SUCCESS'
-                                return
-                            }
-                            else {
-                                setupGcpAccess()
-                                sh """
-                                # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
-                                helm init --client-only
-                                """
-                                // Temp workaround for #968 issue
-                                sh"""
-                                # Remove auto-generated fw rules
-                                gcloud compute firewall-rules list --filter='name:k8s- AND network:${env.param_cluster_name}-vpc' --format='value(name)' --project='${env.param_gcp_project}'| while read i; do if (gcloud compute firewall-rules describe --project='${env.param_gcp_project}'); then gcloud compute firewall-rules delete \$i --quiet; fi; done
-                                """
-                                terraformRun("destroy", "legion")
-                                terraformRun("destroy", "k8s_setup")
-                                terraformRun("destroy", "helm_init")
-                                sh '''
-                                   chmod 600 ~/.ssh/id_rsa
-                                   ssh-keygen -p -N "" -m pem -f ~/.ssh/id_rsa
-                                   ssh-keyscan git.epam.com >> ~/.ssh/known_hosts
-                                '''
-                                terraformRun("destroy", "cluster_dns", "-var=\"zone_type=FORWARDING\" -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\"", "${terraformHome}/cluster_dns", "bucket=${env.param_cluster_name}-tfstate", "${terraformHome}/env_profiles/shared.tfvars")
+        file(credentialsId: "${env.gcpCredential}", variable: 'gcpCredential')]) {
+            withCredentials([
+            file(credentialsId: "${env.hieraPrivatePKCSKey}", variable: 'PrivatePkcsKey')]) {
+                withCredentials([
+                file(credentialsId: "${env.hieraPublicPKCSKey}", variable: 'PublicPkcsKey')]) {
+                    withCredentials([
+                    file(credentialsId: "${env.param_cluster_name}-secrets", variable: 'secrets')]) {
+                        withAWS(credentials: 'kops') {
+                            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
+                                docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root -v ${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns:/opt/legion/terraform/cluster_dns -v ${WORKSPACE}/legion-cicd/terraform/env_profiles/shared.tfvars:/opt/legion/terraform/env_profiles/shared.tfvars -v ${gitKey}:/root/.ssh/id_rsa ") {
+                                    stage('Extract Hiera data') {
+                                        extractHiera("json")
+                                    }
+                                    stage('Remove Legion cluster if exists') {
+                                        sh"""
+                                        # Setup GCP credentials
+                                        gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
+                                        """
+                                        cluster_status = sh(script: "gcloud container clusters list --zone ${env.param_gcp_zone}", returnStdout: true)
+                                        if (!cluster_status.contains("${env.param_cluster_name}")) {
+                                            currentBuild.result = 'SUCCESS'
+                                            return
+                                        }
+                                        else {
+                                            setupGcpAccess()
+                                            sh """
+                                            # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
+                                            helm init --client-only
+                                            """
+                                            // Temp workaround for #968 issue
+                                            sh"""
+                                            # Remove auto-generated fw rules
+                                            gcloud compute firewall-rules list --filter='name:k8s- AND network:${env.param_cluster_name}-vpc' --format='value(name)' --project='${env.param_gcp_project}'| while read i; do if (gcloud compute firewall-rules describe --project='${env.param_gcp_project}'); then gcloud compute firewall-rules delete \$i --quiet; fi; done
+                                            """
+                                            terraformRun("destroy", "legion")
+                                            terraformRun("destroy", "k8s_setup")
+                                            terraformRun("destroy", "helm_init")
+                                            sh '''
+                                            chmod 600 ~/.ssh/id_rsa
+                                            ssh-keygen -p -N "" -m pem -f ~/.ssh/id_rsa
+                                            ssh-keyscan git.epam.com >> ~/.ssh/known_hosts
+                                            '''
+                                            terraformRun("destroy", "cluster_dns", "-var=\"zone_type=FORWARDING\" -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\"", "${terraformHome}/cluster_dns", "bucket=${env.param_cluster_name}-tfstate", "${terraformHome}/env_profiles/shared.tfvars")
 
-                                sh"""
-                                gcloud compute firewall-rules delete ${env.param_cluster_name}-jenkins-access --project=${env.param_gcp_project} --quiet ||true
-                                """
-                                terraformRun("destroy", "gke_create", "-var=\"agent_cidr=${env.agentWanIp}/32\"")
+                                            sh"""
+                                            gcloud compute firewall-rules delete ${env.param_cluster_name}-jenkins-access --project=${env.param_gcp_project} --quiet ||true
+                                            """
+                                            terraformRun("destroy", "gke_create", "-var=\"agent_cidr=${env.agentWanIp}/32\"")
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
-    }
-  }
 }
 
 def legionScope(Closure body) {
@@ -589,7 +606,7 @@ def authorizeJenkinsAgent() {
     }
 }
 
-def terraformRun(command, tfModule, extraVars='', workPath="${terraformHome}/env_types/${env.param_cluster_type}/${tfModule}/", backendConfigBucket="bucket=${env.param_cluster_name}-tfstate", varFile="../../../../env_profiles/${env.param_cluster_name}.tfvars") {
+def terraformRun(command, tfModule, extraVars='', workPath="${terraformHome}/env_types/${env.param_cluster_type}/${tfModule}/", backendConfigBucket="bucket=${env.param_cluster_name}-tfstate", varFile="\${WORKSPACE}/hieradata.json") {
     sh """ #!/bin/bash -xe
         cd ${workPath}
 
@@ -600,21 +617,39 @@ def terraformRun(command, tfModule, extraVars='', workPath="${terraformHome}/env
         echo "Execute ${command} on ${tfModule} state"
 
         if [ ${tfModule} = "cluster_dns" ]; then
-            terraform ${command} -auto-approve \
-              -var-file=${varFile} ${extraVars}
+            terraform ${command} -auto-approve -var-file=${varFile} ${extraVars}
         elif [ ${command} = "apply" ]; then
-            terraform plan  \
-            -var-file=${secrets} \
-            -var-file=../../../../env_profiles/${env.param_cluster_name}.tfvars ${extraVars}
-            terraform ${command} -auto-approve \
-            -var-file=${secrets} \
-            -var-file=../../../../env_profiles/${env.param_cluster_name}.tfvars ${extraVars}
+            terraform plan -var-file=${varFile} ${extraVars}
+            terraform ${command} -auto-approve -var-file=${varFile} ${extraVars}
         else
-            terraform ${command} -auto-approve \
-            -var-file=${secrets} \
-            -var-file=../../../../env_profiles/${env.param_cluster_name}.tfvars ${extraVars}
+            terraform ${command} -auto-approve -var-file=${varFile} ${extraVars}
         fi
+    """
+}
 
+def extractHiera(format) {
+    // checkout repo with hieradata
+    sshagent(["${env.legionProfilesGitlabKey}"]) {
+        sh"""
+        #TODO get repo url from passed parameters
+        mkdir ~/.ssh && ssh-keyscan git.epam.com >> ~/.ssh/known_hosts
+        git clone ${env.param_legion_profiles_repo} legion-profiles
+        cd legion-profiles && git checkout ${env.param_legion_profiles_branch}
+        """
+    }
+
+    // export vars
+    sh """
+    cat ${PrivatePkcsKey} > legion-profiles/private_key.pkcs7.pem
+    cat ${PublicPkcsKey} > legion-profiles/public_key.pkcs7.pem
+    cp tools/hiera_exporter legion-profiles
+
+    cd legion-profiles && python2.7 hiera_exporter \
+    --hiera-config hiera.yaml \
+    --hiera-filters environment=${env.param_cluster_name} cloud=${env.param_cloud_provider} \
+    --vars-template ../vars_template.yaml \
+    --output-format ${format} \
+    --output-path ${WORKSPACE}/hieradata.${format}
     """
 }
 

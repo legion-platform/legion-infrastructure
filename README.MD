@@ -25,14 +25,14 @@ EKS cluster:
  - TBC
 
 Terraform modules for each of the layer could be applied by running the set of command below from the corresponding module directory:
-# TERRAFORM INIT
+### TERRAFORM INIT
 CLUSTER_NAME=<CLUSTER_NAME_HERE> TF_DATA_DIR=/tmp/.terraform_${CLUSTER_NAME}_$(basename "$PWD") bash -c  'terraform init -backend-config="bucket=${CLUSTER_NAME}-tfstate"'
-# TERRAFORM PLAN
+### TERRAFORM PLAN
 CLUSTER_NAME=<CLUSTER_NAME_HERE> TF_DATA_DIR=/tmp/.terraform_${CLUSTER_NAME}_$(basename "$PWD") bash -c  'terraform plan \
 -var-file=/PATH/TO/SECRET/VARIABLES.tfvars \
 -var-file=../../../../env_profiles/${CLUSTER_NAME}.tfvars \
 -var="agent_cidr=<YOUR_IP_HERE>/32"'
-# TERRAFORM APPLY
+### TERRAFORM APPLY
 CLUSTER_NAME=<CLUSTER_NAME_HERE> TF_DATA_DIR=/tmp/.terraform_${CLUSTER_NAME}_$(basename "$PWD") bash -c  'terraform apply \
 -var-file=/PATH/TO/SECRET/VARIABLES.tfvars \
 -var-file=../../../../env_profiles/${CLUSTER_NAME}.tfvars \
