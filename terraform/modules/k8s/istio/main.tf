@@ -37,7 +37,7 @@ resource "helm_release" "istio-init" {
   version     = "${var.istio_version}"
   namespace   = "${var.istio_namespace}"
   repository  = "${data.helm_repository.istio.metadata.0.name}"
-  depends_on  = ["helm_repository.istio"]
+  depends_on  = ["data.helm_repository.istio"]
 }
 
 resource "null_resource" "delay" {
@@ -67,7 +67,7 @@ resource "helm_release" "istio" {
       "${data.template_file.istio_values.rendered}"
     ]
 
-    depends_on = ["null_resource.delay", "helm_repository.istio"]
+    depends_on = ["null_resource.delay", "data.helm_repository.istio"]
 }
 
 data "helm_repository" "legion" {
@@ -103,5 +103,5 @@ resource "helm_release" "knative" {
   version       = "${var.legion_infra_version}"
   namespace     = "${var.knative_namespace}"
   repository    = "${data.helm_repository.legion.metadata.0.name}"
-  depends_on    = ["helm_release.istio"]
+  depends_on    = ["data.helm_repository.legion"]
 }
