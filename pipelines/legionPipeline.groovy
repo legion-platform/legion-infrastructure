@@ -21,40 +21,20 @@ def createGCPCluster() {
             file(credentialsId: "${env.hieraPublicPKCSKey}", variable: 'PublicPkcsKey')]) {
                 withAWS(credentials: 'kops') {
                     wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                        docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root") {
+                        docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GCP_CREDENTIALS=${gcpCredential} -e PROFILE=/tmp/cluster_profile.json --entrypoint '/bin/bash'") {
                             stage('Extract Hiera data') {
                                 extractHiera("json")
-                                gcp_zone = sh(script: "jq '.location' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
-                                gcp_project_id = sh(script: "jq '.project_id' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
                             }
-                            stage('Create GCP resources') {
-                                sh """
-                                set -ex
-                                # Activate service account
-                                gcloud auth activate-service-account --key-file=${gcpCredential} --project=${gcp_project_id}
-                                """
+                            stage('Create Legion Cluster') {
+                                sh"""
+                                    TF_VAR_legion_version=${env.param_legion_infra_version}
+                                    TF_VAR_legion_version=${env.param_legion_version}
+                                    TF_VAR_legion_helm_repo=${env.param_helm_repo}
+                                    TF_VAR_docker_repo=${env.param_docker_repo}
+                                    TF_VAR_model_reference=${commitID}
 
-                                terraformRun("apply", "gke_create")
-
-                                sh """
-                                # Authorize Kube api access
-                                gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${gcp_zone}
+                                    tf_runner create -v
                                 """
-                            }
-                            stage('Init HELM') {
-                                terraformRun("apply", "helm_init")
-                            }
-                            stage('Create cluster specific private DNS zone') {
-                                tfExtraVars = "-var=\"zone_type=FORWARDING\" \
-                                -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\" \
-                                -var=\"networks_to_add=[\\\"infra-vpc\\\"]\""
-                                terraformRun("apply", "cluster_dns", "${tfExtraVars}", "${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns", "bucket=${env.param_cluster_name}-tfstate")
-                            }
-                            stage('Setup K8S Legion dependencies') {
-                                tfExtraVars = "-var=\"legion_infra_version=${env.param_legion_infra_version}\" \
-                                -var=\"legion_helm_repo=${env.param_helm_repo}\" \
-                                -var=\"docker_repo=${env.param_docker_repo}\""
-                                terraformRun("apply", "k8s_setup", "${tfExtraVars}")
                             }
                             stage('Cleanup workspace') {
                                 // Cleanup profiles directory
@@ -81,8 +61,6 @@ def deployLegionToGCP() {
                         docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -u root") {
                             stage('Extract Hiera data') {
                                     extractHiera("json")
-                                    gcp_zone = sh(script: "jq '.location' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
-                                    gcp_project_id = sh(script: "jq '.project_id' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
                                 }
                             stage('Deploy Legion') {
                                 sh """
@@ -126,8 +104,6 @@ def destroyGcpCluster() {
                         docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root") {
                             stage('Extract Hiera data') {
                                 extractHiera("json")
-                                gcp_zone = sh(script: "jq '.location' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
-                                gcp_project_id = sh(script: "jq '.project_id' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
                             }
                             stage('Remove Legion cluster if exists') {
                                 sh"""
