@@ -74,6 +74,7 @@ variable "network_name" {
 # Prometheus monitoring
 ########################
 variable "allowed_ips" {
+  type        = list(string)
   description = "CIDR to allow access from"
 }
 
@@ -147,10 +148,6 @@ variable "dex_static_user_name" {
 
 variable "dex_static_user_id" {
   description = "Dex static user user id"
-}
-
-variable "dex_cookie_secret" {
-  description = "Dex cookie secret"
 }
 
 ##################

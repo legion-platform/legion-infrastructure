@@ -104,12 +104,7 @@ variable "oauth2_helm_chart_version" {
   description = "version of oauth2 proxy helm chart"
 }
 
-variable "dex_cookie_secret" {
-  description = "oauth2 secret for cookies"
-}
-
 variable "oauth2_image_tag" {
   default     = "v3.2.0-amd64"
   description = "image tag of oauth2 proxy"
 }
-

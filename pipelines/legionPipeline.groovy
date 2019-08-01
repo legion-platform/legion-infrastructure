@@ -69,7 +69,7 @@ def createGCPCluster() {
                                 gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
                                 """
 
-                                terraformRun("apply", "gke_create", "-var=\"agent_cidr=${env.agentWanIp}/32\"")
+                                terraformRun("apply", "gke_create")
 
                                 sh """
                                 # Authorize Kube api access
@@ -606,7 +606,7 @@ def authorizeJenkinsAgent() {
     }
 }
 
-def terraformRun(command, tfModule, extraVars='', workPath="${terraformHome}/env_types/${env.param_cluster_type}/${tfModule}/", backendConfigBucket="bucket=${env.param_cluster_name}-tfstate", varFile="\${WORKSPACE}/hieradata.json") {
+def terraformRun(command, tfModule, extraVars='', workPath="${terraformHome}/env_types/${env.param_cluster_type}/${tfModule}/", backendConfigBucket="bucket=${env.param_cluster_name}-tfstate", varFile="\${WORKSPACE}/cluster_profile.json") {
     sh """ #!/bin/bash -xe
         cd ${workPath}
 
@@ -649,7 +649,7 @@ def extractHiera(format) {
     --hiera-filters environment=${env.param_cluster_name} cloud=${env.param_cloud_provider} \
     --vars-template ../vars_template.yaml \
     --output-format ${format} \
-    --output-path ${WORKSPACE}/hieradata.${format}
+    --output-path ${WORKSPACE}/cluster_profile.${format}
     """
 }
 

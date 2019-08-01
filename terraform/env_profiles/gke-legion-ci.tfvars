@@ -28,11 +28,11 @@ dns_zone_name               = "ailifecycle-org"
 legion_helm_repo            = "https://raw.githubusercontent.com/legion-platform/legion-helm-charts/master/"    
 docker_repo                 = "registry.hub.docker.com/legionplatformtest"
 cluster_context             = "gke_or2-msq-epmd-legn-t1iylu_us-east1-b_gke-legion-ci"
-legion_infra_version        = "1.0.0-rc8"
+legion_infra_version        = "1.0.0-rc12"
 github_org_name             = "legion-auth-gcp"
 
 ########################################################
 # Legion
 ########################################################
-legion_version            = "1.0.0-rc12"
+legion_version            = "1.0.0-rc14"
 legion_data_bucket        = "gke-legion-ci-data-store"

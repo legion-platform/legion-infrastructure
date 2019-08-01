@@ -93,7 +93,6 @@ data "template_file" "oauth2-proxy_values" {
     github_org_name   = var.github_org_name
     client_secret     = var.dex_client_secret
     client_id         = var.dex_client_id
-    cookie_secret     = var.dex_cookie_secret
     dex_cookie_expire = var.dex_cookie_expire
     oauth2_image_tag  = var.oauth2_image_tag
   }

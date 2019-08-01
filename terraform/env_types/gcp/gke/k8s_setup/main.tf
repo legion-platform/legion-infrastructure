@@ -19,7 +19,7 @@ module "nginx-ingress" {
   region        = var.region
   project_id    = var.project_id
   cluster_name  = var.cluster_name
-  allowed_ips   = [var.allowed_ips]
+  allowed_ips   = var.allowed_ips
   root_domain   = var.root_domain
   dns_zone_name = var.dns_zone_name
   network_name  = var.network_name
@@ -62,7 +62,6 @@ module "dex" {
   dex_static_user_name    = var.dex_static_user_name
   dex_static_user_id      = var.dex_static_user_id
   dex_client_id           = var.dex_client_id
-  dex_cookie_secret       = var.dex_cookie_secret
 }
 
 module "monitoring" {
