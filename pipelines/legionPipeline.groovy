@@ -444,71 +444,73 @@ def runRobotTestsAtGcp(tags="") {
     withCredentials([
     file(credentialsId: "${env.gcpCredential}", variable: 'gcpCredential')]) {
         withCredentials([
-        file(credentialsId: "${env.param_cluster_name}-testvars", variable: 'testcreds')]) {
-            withAWS(credentials: 'kops') {
-                wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                    docker.image("${env.param_docker_repo}/legion-pipeline-agent:${env.param_legion_version}").inside("-e HOME=/opt/legion -u root") {
-                        stage('Run Robot tests') {
-                            dir("${WORKSPACE}"){
-                                def tags_list = tags.toString().trim().split(',')
-                                def robot_tags = []
-                                def nose_tags = []
+        file(credentialsId: "${env.hieraPrivatePKCSKey}", variable: 'PrivatePkcsKey')]) {
+            withCredentials([
+            file(credentialsId: "${env.hieraPublicPKCSKey}", variable: 'PublicPkcsKey')]) {
+                withAWS(credentials: 'kops') {
+                    wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
+                        docker.image("${env.param_docker_repo}/legion-pipeline-agent:${env.param_legion_version}").inside("-e HOME=/opt/legion -u root") {
+                            stage('Extract Hiera data') {
+                                extractHiera("json")
+                            }
+                            stage('Run Robot tests') {
+                                dir("${WORKSPACE}"){
+                                    def tags_list = tags.toString().trim().split(',')
+                                    def robot_tags = []
+                                    def nose_tags = []
 
-                                for (item in tags_list) {
-                                    if (item.startsWith('-')) {
-                                        item = item.replace("-","")
-                                        robot_tags.add(" -e ${item}")
-                                        nose_tags.add(" -a !${item}")
+                                    for (item in tags_list) {
+                                        if (item.startsWith('-')) {
+                                            item = item.replace("-","")
+                                            robot_tags.add(" -e ${item}")
+                                            nose_tags.add(" -a !${item}")
+                                            }
+                                        else if (item?.trim()) {
+                                            robot_tags.add(" -i ${item}")
+                                            nose_tags.add(" -a ${item}")
                                         }
-                                    else if (item?.trim()) {
-                                        robot_tags.add(" -i ${item}")
-                                        nose_tags.add(" -a ${item}")
                                     }
+
+                                    env.robot_tags= robot_tags.join(" ")
+                                    env.nose_tags = nose_tags.join(" ")
+
+                                    sh """
+                                        mkdir /opt/legion/profiles
+                                        ln -sf /opt/legion/cluster_profile.yaml /opt/legion/profiles/${env.full_cluster_name}.yml
+
+                                        echo "Starting robot tests"
+                                        make GOOGLE_APPLICATION_CREDENTIALS=${gcpCredential} \
+                                            CLUSTER_NAME=${env.full_cluster_name} \
+                                            CREDENTIAL_SECRETS=/opt/legion/cluster_profile.yaml \
+                                            PATH_TO_PROFILES_DIR=/opt/legion/profiles/ \
+                                            ROBOT_THREADS=3 \
+                                            LEGION_VERSION=${env.param_legion_version} e2e-robot || true
+
+                                        cp -R target/ ${WORKSPACE}
+                                    """
+
+                                    robot_report = sh(script: 'find target/ -name "*.xml" | wc -l', returnStdout: true)
+
+                                    if (robot_report.toInteger() > 0) {
+                                        step([
+                                            $class : 'RobotPublisher',
+                                            outputPath : 'target/',
+                                            outputFileName : "*.xml",
+                                            disableArchiveOutput : false,
+                                            passThreshold : 100,
+                                            unstableThreshold: 95.0,
+                                            onlyCritical : true,
+                                            otherFiles : "*.png",
+                                        ])
+                                    }
+                                    else {
+                                        echo "No '*.xml' files for generating robot report"
+                                        currentBuild.result = 'UNSTABLE'
+                                    }
+
+                                    // Cleanup
+                                    sh "rm -rf ${WORKSPACE}/target/"
                                 }
-
-                                env.robot_tags= robot_tags.join(" ")
-                                env.nose_tags = nose_tags.join(" ")
-
-                                setupGcpAccess()
-
-                                sh """
-                                    cp ${testcreds} /opt/legion/.secrets.yaml 
-                                    cd /opt/legion 
-                                    mkdir /opt/legion/profiles
-                                    ln -sf /opt/legion/.secrets.yaml /opt/legion/profiles/${env.full_cluster_name}.yml
-
-                                    echo "Starting robot tests"
-                                    make GOOGLE_APPLICATION_CREDENTIALS=${gcpCredential} \
-                                         CLUSTER_NAME=${env.full_cluster_name} \
-                                         CREDENTIAL_SECRETS=/opt/legion/.secrets.yaml \
-                                         PATH_TO_PROFILES_DIR=/opt/legion/profiles/ \
-                                         ROBOT_THREADS=6 \
-                                         LEGION_VERSION=${env.param_legion_version} e2e-robot || true
-
-                                    cp -R target/ ${WORKSPACE}
-                                """
-
-                                robot_report = sh(script: 'find target/ -name "*.xml" | wc -l', returnStdout: true)
-
-                                if (robot_report.toInteger() > 0) {
-                                    step([
-                                        $class : 'RobotPublisher',
-                                        outputPath : 'target/',
-                                        outputFileName : "*.xml",
-                                        disableArchiveOutput : false,
-                                        passThreshold : 100,
-                                        unstableThreshold: 95.0,
-                                        onlyCritical : true,
-                                        otherFiles : "*.png",
-                                    ])
-                                }
-                                else {
-                                    echo "No '*.xml' files for generating robot report"
-                                    currentBuild.result = 'UNSTABLE'
-                                }
-
-                                // Cleanup
-                                sh "rm -rf ${WORKSPACE}/target/"
                             }
                         }
                     }

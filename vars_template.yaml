@@ -65,17 +65,6 @@ dex_static_user_pass: ~
 dex_static_user_hash: ~
 dex_static_user_name: ~
 dex_static_user_id: ~
-# keycloak
-keycloak_client_secret: ~
-keycloak_client_id: ~
-keycloak_github_client_id: ~
-keycloak_github_secret: ~
-keycloak_admin_user: ~
-keycloak_admin_pass: ~
-keycloak_db_user: ~
-keycloak_db_pass: ~
-keycloak_pg_user: ~
-keycloak_pg_pass: ~
 
 ########################################################
 # Legion
