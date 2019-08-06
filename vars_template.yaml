@@ -14,6 +14,8 @@ aws_vpc_id: ~                 # AWS peered VPC ID
 network_name: ~               # GCP VPC Network name
 bastion_tag: ~                # Bastion host network tag
 gke_node_tag: ~               # GKE cluster node's network tag
+infra_cidr: ~                 # Core infrastructure resources CIDR
+pods_cidr: ~                  # Cluster PODs CIDR
 
 ########################################################
 # GKE module
