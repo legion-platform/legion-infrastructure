@@ -72,6 +72,8 @@ dex_static_user_id: ~
 # Legion
 ########################################################
 enclave_jwt_secret: ~
+api_private_key: ~
+api_public_key: ~
 ### Nexus
 model_docker_url: ~
 docker_user: ~
