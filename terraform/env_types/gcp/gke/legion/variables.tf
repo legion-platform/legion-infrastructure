@@ -118,3 +118,6 @@ variable "collector_region" {
   description = "Collector's storage bucket region"
 }
 
+variable "mlflow_toolchain_version" {
+  description = "Version of legion-mlflow helm chart"
+}

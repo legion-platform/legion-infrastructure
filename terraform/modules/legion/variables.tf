@@ -65,6 +65,21 @@ variable "legion_namespace" {
   description = "Legion k8s namespace"
 }
 
+variable "legion_training_namespace" {
+  default     = "legion-training"
+  description = "Legion training k8s namespace"
+}
+
+variable "legion_packaging_namespace" {
+  default     = "legion-packaging"
+  description = "Legion packaging k8s namespace"
+}
+
+variable "legion_deployment_namespace" {
+  default     = "legion-deployment"
+  description = "Legion deployment k8s namespace"
+}
+
 variable "docker_repo" {
   description = "Legion Docker repo url"
 }
@@ -137,3 +152,6 @@ variable "collector_region" {
   description = "Collector's storage bucket region"
 }
 
+variable "mlflow_toolchain_version" {
+  description = "Version of legion-mlflow helm chart"
+}

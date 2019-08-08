@@ -42,6 +42,7 @@ github_org_name: str            # GitHub Organization name for cluster access
 # Legion
 ########################################################
 legion_version: str             # Legion version to be deployed
+mlflow_toolchain_version: str   # Mlflow toolchain version to be deployed
 legion_data_bucket: str         # GCP Storage bucket for Legion data
 
 ########################################################

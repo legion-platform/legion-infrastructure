@@ -29,5 +29,6 @@ module "legion" {
   model_resources_mem      = var.model_resources_mem
   api_private_key          = var.api_private_key
   api_public_key           = var.api_public_key
+  mlflow_toolchain_version = var.mlflow_toolchain_version
 }
 
