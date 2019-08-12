@@ -648,10 +648,11 @@ def extractHiera(format) {
 
     cd legion-profiles && python2.7 hiera_exporter \
     --hiera-config hiera.yaml \
-    --hiera-filters environment=${env.param_cluster_name} cloud=${env.param_cloud_provider} \
     --vars-template ../vars_template.yaml \
+    --hiera-environment ${env.param_cluster_name} \
+    --hiera-cloud ${env.param_cloud_provider} \
     --output-format ${format} \
-    --output-path ${WORKSPACE}/cluster_profile.${format}
+    --output-file ${WORKSPACE}/cluster_profile.${format}
     """
 }
 
