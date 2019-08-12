@@ -3,79 +3,80 @@
 ########################################################
 # set GOOGLE_CREDENTIALS=/path/to/creds/.json or enable the property below
 # gcp_credentials:            # path to /gpc/credential/file.json
-cluster_name: ~               # Common gcp cluster name
-region: ~                     # GCP region for environment regional resources
-zone: ~                       # GCP cluster zone where the cluster is deployed
-root_domain: ~                # Root domain of the cluster
-aws_profile: ~                # AWS boto profile
-config_context_auth_info: ~   # GKE cluster auth info
-config_context_cluster: ~     # GKE cluster context
-aws_vpc_id: ~                 # AWS peered VPC ID
-network_name: ~               # GCP VPC Network name
-bastion_tag: ~                # Bastion host network tag
-gke_node_tag: ~               # GKE cluster node's network tag
-infra_cidr: ~                 # Core infrastructure resources CIDR
-pods_cidr: ~                  # Cluster PODs CIDR
+cluster_name: str               # Common gcp cluster name
+region: str                     # GCP region for environment regional resources
+zone: str                       # GCP cluster zone where the cluster is deployed
+root_domain: str                # Root domain of the cluster
+aws_profile: str                # AWS boto profile
+config_context_auth_info: str   # GKE cluster auth info
+config_context_cluster: str     # GKE cluster context
+aws_vpc_id: str                 # AWS peered VPC ID
+network_name: str               # GCP VPC Network name
+bastion_tag: str                # Bastion host network tag
+gke_node_tag: str               # GKE cluster node's network tag
+infra_cidr: str                 # Core infrastructure resources CIDR
+pods_cidr: str                  # Cluster PODs CIDR
 
 ########################################################
 # GKE module
 ########################################################
-location: ~                   # GKE cluster zone
-dns_zone_name: ~              # Cloud DNS zone name for the cluster
+location: str                   # GKE cluster zone
+dns_zone_name: str              # Cloud DNS zone name for the cluster
 
 ########################################################
 # Common Legion variables
 ########################################################
-legion_helm_repo: ~           # Helm repository url with Legion charts 
-docker_repo: ~                # Docker Legion repository url
-cluster_context: ~            # K8S cluster context
-legion_infra_version: ~       # Legion infrastructure version to be deployed
-github_org_name: ~            # GitHub Organization name for cluster access
+legion_helm_repo: str           # Helm repository url with Legion charts 
+docker_repo: str                # Docker Legion repository url
+cluster_context: str            # K8S cluster context
+legion_infra_version: str       # Legion infrastructure version to be deployed
+github_org_name: str            # GitHub Organization name for cluster access
 
 ########################################################
 # Legion
 ########################################################
-legion_version: ~             # Legion version to be deployed
-legion_data_bucket: ~         # GCP Storage bucket for Legion data
+legion_version: str             # Legion version to be deployed
+legion_data_bucket: str         # GCP Storage bucket for Legion data
 
 ########################################################
 # Common variables
 ########################################################
-project_id: ~
-allowed_ips: ~
-secrets_storage: ~            # AWS S3 bucket with sensitive data such as TLS certs and cluster SSH keys
-gcp_cidr: ~
-aws_sg: ~
-aws_cidr: ~
-aws_route_table_id: ~
+project_id: str
+allowed_ips: list
+secrets_storage: str            # AWS S3 bucket with sensitive data such as TLS certs and cluster SSH keys
+gcp_cidr: str
+aws_sg: str
+aws_cidr: str
+aws_route_table_id: str
 
 ########################################################
 # K8S base components
 ########################################################
 # Prometheus monitoring
-alert_slack_url: ~
-grafana_admin: ~
-grafana_pass: ~
+alert_slack_url: str
+grafana_admin: str
+grafana_pass: str
 # Dex
-dex_github_clientid: ~
-dex_github_clientSecret: ~
-oauth2_github_cookieSecret: ~
-dex_client_secret: ~
-dex_client_id: ~
-dex_static_user_email: ~
-dex_static_user_pass: ~
-dex_static_user_hash: ~
-dex_static_user_name: ~
-dex_static_user_id: ~
+dex_github_clientid: str
+dex_github_clientSecret: str
+oauth2_github_cookieSecret: str
+dex_client_secret: str
+dex_client_id: str
+dex_static_user_email: str
+dex_static_user_pass: str
+dex_static_user_hash: str
+dex_static_user_name: str
+dex_static_user_id: str
 
 ########################################################
 # Legion
 ########################################################
-enclave_jwt_secret: ~
-api_private_key: ~
-api_public_key: ~
+enclave_jwt_secret: str
+api_private_key: str
+api_public_key: str
+api_public_key_2: str
 ### Nexus
-model_docker_url: ~
-docker_user: ~
-docker_password: ~
-jenkins_git_key: ~
+model_docker_url: str
+docker_user: str
+docker_password: str
+jenkins_git_key: str

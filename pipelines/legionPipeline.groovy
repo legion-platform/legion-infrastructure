@@ -551,7 +551,7 @@ def terminateLegionEnclave() {
         file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
         withAWS(credentials: 'kops') {
             wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion/ansible -v ${WORKSPACE}//profiles:/opt/legion/profiles -u root") {
+                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion/ansible -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
                     stage('Terminate Legion Enclave') {
                         sh """
                         cd ${ansibleHome} && \

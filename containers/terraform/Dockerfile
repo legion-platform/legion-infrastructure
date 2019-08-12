@@ -42,7 +42,7 @@ RUN CLOUD_SDK_REPO="cloud-sdk-$(grep VERSION_CODENAME /etc/os-release | cut -d '
 
 # Install Hiera
 RUN curl https://bootstrap.pypa.io/get-pip.py |python2.7 && \
-    pip install hiera-py==0.0.1 pyyaml==5.1.1 && \
+    pip install pyyaml==5.1.1 && \
     gem install hiera hiera-eyaml
 
 COPY tools/hiera_exporter /opt/legion/tools/hiera_exporter

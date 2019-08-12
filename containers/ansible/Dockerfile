@@ -46,7 +46,7 @@ RUN curl -fsSLO https://kubernetes-helm.storage.googleapis.com/helm-${HELM_VERSI
     mv /tmp/helm/linux-amd64/helm /usr/local/bin/helm && rm -rf /tmp/helm
 
 # Install Hiera
-RUN pip install hiera-py==0.0.1 pyyaml==5.1.1 && \
+RUN pip install pyyaml==5.1.1 && \
     gem install hiera hiera-eyaml
 
 COPY tools/hiera_exporter /opt/legion/tools/hiera_exporter
