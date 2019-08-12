@@ -142,6 +142,10 @@ variable "dex_static_user_id" {
   description = "Dex static user user id"
 }
 
+variable "oauth2_github_cookieSecret" {
+  description = "oauth2 secret for cookies"
+}
+
 ########################
 # Istio
 ########################
