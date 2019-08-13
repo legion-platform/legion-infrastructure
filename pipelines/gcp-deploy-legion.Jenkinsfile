@@ -71,7 +71,6 @@ pipeline {
             }
             steps {
                 script {
-                    legion.ansibleDebugRunCheck(env.param_debug_run)
                     legion.runRobotTestsAtGcp(env.param_tests_tags ?: "")
                 }
             }

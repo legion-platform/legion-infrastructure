@@ -476,13 +476,10 @@ def runRobotTestsAtGcp(tags="") {
 
                                     sh """
                                         mkdir /opt/legion/profiles
-                                        ln -sf /opt/legion/cluster_profile.yaml /opt/legion/profiles/${env.full_cluster_name}.yml
 
                                         echo "Starting robot tests"
                                         make GOOGLE_APPLICATION_CREDENTIALS=${gcpCredential} \
-                                            CLUSTER_NAME=${env.full_cluster_name} \
-                                            CREDENTIAL_SECRETS=/opt/legion/cluster_profile.yaml \
-                                            PATH_TO_PROFILES_DIR=/opt/legion/profiles/ \
+                                            CLUSTER_PROFILE=/opt/legion/cluster_profile.yaml \
                                             ROBOT_THREADS=3 \
                                             LEGION_VERSION=${env.param_legion_version} e2e-robot || true
 
@@ -635,7 +632,9 @@ def extractHiera(format) {
         sh"""
         #TODO get repo url from passed parameters
         mkdir ~/.ssh && ssh-keyscan git.epam.com >> ~/.ssh/known_hosts
-        git clone ${env.param_legion_profiles_repo} legion-profiles
+        if [ ! -d "legion-profiles" ]; then
+            git clone ${env.param_legion_profiles_repo} legion-profiles
+        fi
         cd legion-profiles && git checkout ${env.param_legion_profiles_branch}
         """
     }

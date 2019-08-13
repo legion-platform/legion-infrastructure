@@ -74,7 +74,6 @@ dex_static_user_id: str
 enclave_jwt_secret: str
 api_private_key: str
 api_public_key: str
-api_public_key_2: str
 ### Nexus
 model_docker_url: str
 docker_user: str
