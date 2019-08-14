@@ -474,13 +474,14 @@ def runRobotTestsAtGcp(tags="") {
                                     env.robot_tags= robot_tags.join(" ")
                                     env.nose_tags = nose_tags.join(" ")
 
-                                    sh """
-                                        mkdir /opt/legion/profiles
+                                    setupGcpAccess()
 
+                                    sh """
+                                        cd /opt/legion
                                         echo "Starting robot tests"
                                         make GOOGLE_APPLICATION_CREDENTIALS=${gcpCredential} \
-                                            CLUSTER_PROFILE=/opt/legion/cluster_profile.yaml \
-                                            ROBOT_THREADS=3 \
+                                            CLUSTER_PROFILE=${WORKSPACE}/cluster_profile.json \
+                                            ROBOT_THREADS=6 \
                                             LEGION_VERSION=${env.param_legion_version} e2e-robot || true
 
                                         cp -R target/ ${WORKSPACE}
@@ -631,7 +632,7 @@ def extractHiera(format) {
     sshagent(["${env.legionProfilesGitlabKey}"]) {
         sh"""
         #TODO get repo url from passed parameters
-        mkdir ~/.ssh && ssh-keyscan git.epam.com >> ~/.ssh/known_hosts
+        mkdir \$(getent passwd \$(whoami) | cut -d: -f6)/.ssh && ssh-keyscan git.epam.com >> \$(getent passwd \$(whoami) | cut -d: -f6)/.ssh/known_hosts
         if [ ! -d "legion-profiles" ]; then
             git clone ${env.param_legion_profiles_repo} legion-profiles
         fi
@@ -645,7 +646,7 @@ def extractHiera(format) {
     cat ${PublicPkcsKey} > legion-profiles/public_key.pkcs7.pem
     cp tools/hiera_exporter legion-profiles
 
-    cd legion-profiles && python2.7 hiera_exporter \
+    cd legion-profiles && python3 hiera_exporter \
     --hiera-config hiera.yaml \
     --vars-template ../vars_template.yaml \
     --hiera-environment ${env.param_cluster_name} \

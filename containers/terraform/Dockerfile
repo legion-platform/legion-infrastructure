@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # install system utilities
 RUN apt-get update && apt-get install -y \
-    apt-transport-https bash curl tar openssh-client gnupg \
+    apt-transport-https bash curl tar openssh-client gnupg python3=3.6.7-1~18.04 python3-distutils\
     sshpass git ca-certificates apt-utils locales wget jq unzip rubygems && \
     apt-get clean && apt-get autoclean
 
@@ -41,8 +41,8 @@ RUN CLOUD_SDK_REPO="cloud-sdk-$(grep VERSION_CODENAME /etc/os-release | cut -d '
     apt-get update -y && apt-get install google-cloud-sdk -y
 
 # Install Hiera
-RUN curl https://bootstrap.pypa.io/get-pip.py |python2.7 && \
-    pip install pyyaml==5.1.1 && \
+RUN curl https://bootstrap.pypa.io/get-pip.py |python3 && \
+    pip3 install pyyaml==5.1.1 && \
     gem install hiera hiera-eyaml
 
 COPY tools/hiera_exporter /opt/legion/tools/hiera_exporter

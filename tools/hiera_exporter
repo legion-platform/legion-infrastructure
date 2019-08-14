@@ -40,7 +40,6 @@ def get_variables_list(file):
 
     return data
 
-
 def read_hiera_data(hiera_config, hiera_environment, hiera_cloud, all_vars):
     """
     Read data from Hiera
@@ -62,8 +61,6 @@ def read_hiera_data(hiera_config, hiera_environment, hiera_cloud, all_vars):
         variable = hiera_get(hiera_config, key_name, hiera_environment, hiera_cloud)
         if variable != None:
             filtered_vars.update({key_name: variable})
-        else:
-            log.warning('Key {} is missing in hieradata'.format(key_name))
     log.debug('Exported Hiera data: {}'.format(filtered_vars))
     return filtered_vars
 
@@ -75,15 +72,15 @@ def hiera_get(config, key_name, env, cloud):
     hiera_command = [HIERA_BINARY, '-a', '--config', config, key_name, "environment={}".format(env), "cloud={}".format(cloud)]
     log.debug(hiera_command)
     output = None
+
     try:
-        output = ast.literal_eval(subprocess.check_output(hiera_command))
+        output = ast.literal_eval(subprocess.check_output(hiera_command, encoding="utf-8"))
+        log.debug(output)
         result = output[0].strip('[]') if len(output) < 2 else output
-    except Exception:
-        result = None
-    if not result:
-        return None
-    else:
         return result
+    except Exception:
+        log.warning('Key {} is missing in hieradata'.format(key_name))
+        return None
 
 def work(args):
     """"

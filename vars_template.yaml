@@ -16,6 +16,7 @@ bastion_tag: str                # Bastion host network tag
 gke_node_tag: str               # GKE cluster node's network tag
 infra_cidr: str                 # Core infrastructure resources CIDR
 pods_cidr: str                  # Cluster PODs CIDR
+cloud_type: str                 # Target hosting cloud
 
 ########################################################
 # GKE module
@@ -41,41 +42,41 @@ legion_data_bucket: str         # GCP Storage bucket for Legion data
 ########################################################
 # Common variables
 ########################################################
-project_id: str
-allowed_ips: list
+project_id: str                 # GCP project ID
+allowed_ips: list               # List of WAN IPs to whitelist on cluster
 secrets_storage: str            # AWS S3 bucket with sensitive data such as TLS certs and cluster SSH keys
-gcp_cidr: str
-aws_sg: str
-aws_cidr: str
-aws_route_table_id: str
+gcp_cidr: str                   # CIDR for cluster nodes
+aws_sg: str                     # AWS Security group ID to grant access from nodes at GCP (for Core components access)
+aws_cidr: str                   # AWS CIDR for VPC peering setup
+aws_route_table_id: str         # AWS route table ID for VPC peering setup
 
 ########################################################
 # K8S base components
 ########################################################
 # Prometheus monitoring
-alert_slack_url: str
-grafana_admin: str
-grafana_pass: str
+alert_slack_url: str            # Slack URL for alerting
+grafana_admin: str              # Grafana admin login
+grafana_pass: str               # Grafana admin password
 # Dex
-dex_github_clientid: str
-dex_github_clientSecret: str
-oauth2_github_cookieSecret: str
-dex_client_secret: str
-dex_client_id: str
-dex_static_user_email: str
-dex_static_user_pass: str
-dex_static_user_hash: str
-dex_static_user_name: str
-dex_static_user_id: str
+dex_github_clientid: str        # Github client ID
+dex_github_clientSecret: str    # Github client secret
+oauth2_github_cookieSecret: str # Github cookie secret
+dex_client_secret: str          # Dex client secret for cluster services auth
+dex_client_id: str              # Dex client id for cluster services auth
+dex_static_user_email: str      # Static user for cluster access
+dex_static_user_pass: str       # Static password for cluster access
+dex_static_user_hash: str       # Bcrypt hash of the password string
+dex_static_user_name: str       # Static user name
+dex_static_user_id: str         # Static user id
 
 ########################################################
 # Legion
 ########################################################
-enclave_jwt_secret: str
-api_private_key: str
-api_public_key: str
+enclave_jwt_secret: str         # JWT secret for legion services
+api_private_key: str            # API private key for Legion services
+api_public_key: str             # API public key for Legion services
 ### Nexus
-model_docker_url: str
-docker_user: str
-docker_password: str
-jenkins_git_key: str
+model_docker_url: str           # Docker repo URL for models
+docker_user: str                # Docker user for models repo
+docker_password: str            # Docker password for models repo
+jenkins_git_key: str            # Git key to checkout model data
