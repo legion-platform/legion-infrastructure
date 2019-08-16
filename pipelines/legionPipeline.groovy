@@ -58,7 +58,7 @@ def createGCPCluster() {
                 file(credentialsId: "${env.hieraPublicPKCSKey}", variable: 'PublicPkcsKey')]) {
                     withAWS(credentials: 'kops') {
                         wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                            docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root -v ${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns:/opt/legion/terraform/cluster_dns") {
+                            docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root") {
                                 stage('Extract Hiera data') {
                                     extractHiera("json")
                                 }
@@ -84,11 +84,6 @@ def createGCPCluster() {
                                     """
                                 }
                                 stage('Create cluster specific private DNS zone') {
-                                    sshagent(["${env.legionCicdGitlabKey}"]) {
-                                        sh"""
-                                        #TODO get repo url from passed parameters
-                                        mkdir -p \$(getent passwd \$(whoami) | cut -d: -f6)/.ssh && ssh-keyscan git.epam.com >> \$(getent passwd \$(whoami) | cut -d: -f6)/.ssh/known_hosts
-                                        """
                                         tfExtraVars = "-var=\"zone_type=FORWARDING\" \
                                         -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\" \
                                         -var=\"networks_to_add=[\\\"infra-vpc\\\"]\""
