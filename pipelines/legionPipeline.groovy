@@ -204,49 +204,47 @@ def destroyGcpCluster() {
             file(credentialsId: "${env.hieraPrivatePKCSKey}", variable: 'PrivatePkcsKey')]) {
                 withCredentials([
                 file(credentialsId: "${env.hieraPublicPKCSKey}", variable: 'PublicPkcsKey')]) {
-                    withCredentials([
-                    file(credentialsId: "${env.param_cluster_name}-secrets", variable: 'secrets')]) {
-                        withAWS(credentials: 'kops') {
-                            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                                docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root -v ${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns:/opt/legion/terraform/cluster_dns -v ${WORKSPACE}/legion-cicd/terraform/env_profiles/shared.tfvars:/opt/legion/terraform/env_profiles/shared.tfvars -v ${gitKey}:/root/.ssh/id_rsa ") {
-                                    stage('Extract Hiera data') {
-                                        extractHiera("json")
+                    withAWS(credentials: 'kops') {
+                        wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
+                            docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root -v ${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns:/opt/legion/terraform/cluster_dns -v ${WORKSPACE}/legion-cicd/terraform/env_profiles/shared.tfvars:/opt/legion/terraform/env_profiles/shared.tfvars -v ${gitKey}:/root/.ssh/id_rsa ") {
+                                stage('Extract Hiera data') {
+                                    extractHiera("json")
+                                }
+                                stage('Remove Legion cluster if exists') {
+                                    sh"""
+                                    # Setup GCP credentials
+                                    gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
+                                    """
+                                    cluster_status = sh(script: "gcloud container clusters list --zone ${env.param_gcp_zone}", returnStdout: true)
+                                    if (!cluster_status.contains("${env.param_cluster_name}")) {
+                                        currentBuild.result = 'SUCCESS'
+                                        return
                                     }
-                                    stage('Remove Legion cluster if exists') {
-                                        sh"""
-                                        # Setup GCP credentials
-                                        gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
+                                    else {
+                                        setupGcpAccess()
+                                        sh """
+                                        # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
+                                        helm init --client-only
                                         """
-                                        cluster_status = sh(script: "gcloud container clusters list --zone ${env.param_gcp_zone}", returnStdout: true)
-                                        if (!cluster_status.contains("${env.param_cluster_name}")) {
-                                            currentBuild.result = 'SUCCESS'
-                                            return
-                                        }
-                                        else {
-                                            setupGcpAccess()
-                                            sh """
-                                            # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
-                                            helm init --client-only
-                                            """
-                                            // Temp workaround for #968 issue
-                                            sh"""
-                                            # Remove auto-generated fw rules
-                                            gcloud compute firewall-rules list --filter='name:k8s- AND network:${env.param_cluster_name}-vpc' --format='value(name)' --project='${env.param_gcp_project}'| while read i; do if (gcloud compute firewall-rules describe --project='${env.param_gcp_project}'); then gcloud compute firewall-rules delete \$i --quiet; fi; done
-                                            """
-                                            terraformRun("destroy", "legion")
-                                            terraformRun("destroy", "k8s_setup")
-                                            terraformRun("destroy", "helm_init")
-                                            sh '''
-                                            chmod 600 ~/.ssh/id_rsa
-                                            ssh-keygen -p -N "" -m pem -f ~/.ssh/id_rsa
-                                            ssh-keyscan git.epam.com >> ~/.ssh/known_hosts
-                                            '''
-                                            terraformRun("destroy", "cluster_dns", "-var=\"zone_type=FORWARDING\" -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\"", "${terraformHome}/cluster_dns", "bucket=${env.param_cluster_name}-tfstate", "${terraformHome}/env_profiles/shared.tfvars")
+                                        // Temp workaround for #968 issue
+                                        sh"""
+                                        # Remove auto-generated fw rules
+                                        gcloud compute firewall-rules list --filter='name:k8s- AND network:${env.param_cluster_name}-vpc' --format='value(name)' --project='${env.param_gcp_project}'| while read i; do if (gcloud compute firewall-rules describe --project='${env.param_gcp_project}'); then gcloud compute firewall-rules delete \$i --quiet; fi; done
+                                        """
+                                        terraformRun("destroy", "legion")
+                                        terraformRun("destroy", "k8s_setup")
+                                        terraformRun("destroy", "helm_init")
+                                        sh '''
+                                        chmod 600 ~/.ssh/id_rsa
+                                        ssh-keygen -p -N "" -m pem -f ~/.ssh/id_rsa
+                                        ssh-keyscan git.epam.com >> ~/.ssh/known_hosts
+                                        '''
+                                        terraformRun("destroy", "cluster_dns", "-var=\"zone_type=FORWARDING\" -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\"", "${terraformHome}/cluster_dns", "bucket=${env.param_cluster_name}-tfstate", "${terraformHome}/env_profiles/shared.tfvars")
 
-                                            sh"""
-                                            gcloud compute firewall-rules delete ${env.param_cluster_name}-jenkins-access --project=${env.param_gcp_project} --quiet ||true
-                                            """
-                                            terraformRun("destroy", "gke_create", "-var=\"agent_cidr=${env.agentWanIp}/32\"")
+                                        sh"""
+                                        gcloud compute firewall-rules delete ${env.param_cluster_name}-jenkins-access --project=${env.param_gcp_project} --quiet ||true
+                                        """
+                                        terraformRun("destroy", "gke_create", "-var=\"agent_cidr=${env.agentWanIp}/32\"")
                                     }
                                 }
                             }
@@ -255,6 +253,7 @@ def destroyGcpCluster() {
                 }
             }
         }
+    }
 }
 
 def legionScope(Closure body) {
