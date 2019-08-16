@@ -48,54 +48,59 @@ def createCluster() {
 }
 
 def createGCPCluster() {
-  withCredentials([
-  sshUserPrivateKey(credentialsId: "${env.legionCicdGitlabKey}", keyFileVariable: 'gitKey')]) {
     withCredentials([
     file(credentialsId: "${env.gcpCredential}", variable: 'gcpCredential')]) {
         withCredentials([
-        file(credentialsId: "${env.hieraPrivatePKCSKey}", variable: 'PrivatePkcsKey')]) {
+        sshUserPrivateKey(credentialsId: "${env.legionCicdGitlabKey}", keyFileVariable: 'legionCicdGitlabKey')]) {
             withCredentials([
-            file(credentialsId: "${env.hieraPublicPKCSKey}", variable: 'PublicPkcsKey')]) {
-                withAWS(credentials: 'kops') {
-                    wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                        docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root -v ${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns:/opt/legion/terraform/cluster_dns -v ${WORKSPACE}/legion-cicd/terraform/env_profiles/shared.tfvars:/opt/legion/terraform/env_profiles/shared.tfvars -v ${gitKey}:/root/.ssh/id_rsa") {
-                            stage('Extract Hiera data') {
-                                extractHiera("json")
-                            }
-                            stage('Create GCP resources') {
-                                sh """
-                                set -ex
-                                # Activate service account
-                                gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
-                                """
+            file(credentialsId: "${env.hieraPrivatePKCSKey}", variable: 'PrivatePkcsKey')]) {
+                withCredentials([
+                file(credentialsId: "${env.hieraPublicPKCSKey}", variable: 'PublicPkcsKey')]) {
+                    withAWS(credentials: 'kops') {
+                        wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
+                            docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root -v ${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns:/opt/legion/terraform/cluster_dns") {
+                                stage('Extract Hiera data') {
+                                    extractHiera("json")
+                                }
+                                stage('Create GCP resources') {
+                                    sh """
+                                    set -ex
+                                    # Activate service account
+                                    gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
+                                    """
 
-                                terraformRun("apply", "gke_create")
+                                    terraformRun("apply", "gke_create")
 
-                                sh """
-                                # Authorize Kube api access
-                                gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${env.param_gcp_zone} --project=${env.param_gcp_project}
-                                """
-                            }
-                            stage('Init HELM') {
-                                terraformRun("apply", "helm_init")
-                                sh """
-                                # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
-                                helm init --client-only
-                                """
-                            }
-                            stage('Create cluster specific private DNS zone') {
-                                sh '''
-                                chmod 600 ~/.ssh/id_rsa
-                                ssh-keygen -p -N "" -m pem -f ~/.ssh/id_rsa
-                                ssh-keyscan git.epam.com >> ~/.ssh/known_hosts
-                                '''
-                                terraformRun("apply", "cluster_dns", "-var=\"zone_type=FORWARDING\" -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\" -var=\"networks_to_add=[\\\"infra-vpc\\\"]\"", "${terraformHome}/cluster_dns", "bucket=${env.param_cluster_name}-tfstate", "${terraformHome}/env_profiles/shared.tfvars")
-                            }
-                            stage('Setup K8S Legion dependencies') {
-                                tfExtraVars = "-var=\"legion_infra_version=${env.param_legion_infra_version}\" \
-                                -var=\"legion_helm_repo=${env.param_helm_repo}\" \
-                                -var=\"docker_repo=${env.param_docker_repo}\""
-                                terraformRun("apply", "k8s_setup", "${tfExtraVars}")
+                                    sh """
+                                    # Authorize Kube api access
+                                    gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${env.param_gcp_zone} --project=${env.param_gcp_project}
+                                    """
+                                }
+                                stage('Init HELM') {
+                                    terraformRun("apply", "helm_init")
+                                    sh """
+                                    # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
+                                    helm init --client-only
+                                    """
+                                }
+                                stage('Create cluster specific private DNS zone') {
+                                    sshagent(["${env.legionCicdGitlabKey}"]) {
+                                        sh"""
+                                        #TODO get repo url from passed parameters
+                                        mkdir -p \$(getent passwd \$(whoami) | cut -d: -f6)/.ssh && ssh-keyscan git.epam.com >> \$(getent passwd \$(whoami) | cut -d: -f6)/.ssh/known_hosts
+                                        """
+                                        tfExtraVars = "-var=\"zone_type=FORWARDING\" \
+                                        -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\" \
+                                        -var=\"networks_to_add=[\\\"infra-vpc\\\"]\""
+                                        terraformRun("apply", "cluster_dns", "${tfExtraVars}", "${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns", "bucket=${env.param_cluster_name}-tfstate")
+                                    }
+                                }
+                                stage('Setup K8S Legion dependencies') {
+                                    tfExtraVars = "-var=\"legion_infra_version=${env.param_legion_infra_version}\" \
+                                    -var=\"legion_helm_repo=${env.param_helm_repo}\" \
+                                    -var=\"docker_repo=${env.param_docker_repo}\""
+                                    terraformRun("apply", "k8s_setup", "${tfExtraVars}")
+                                }
                             }
                         }
                     }
@@ -103,7 +108,6 @@ def createGCPCluster() {
             }
         }
     }
-  }
 }
 
 def terminateCluster() {
@@ -631,7 +635,7 @@ def extractHiera(format) {
     sshagent(["${env.legionProfilesGitlabKey}"]) {
         sh"""
         #TODO get repo url from passed parameters
-        mkdir \$(getent passwd \$(whoami) | cut -d: -f6)/.ssh && ssh-keyscan git.epam.com >> \$(getent passwd \$(whoami) | cut -d: -f6)/.ssh/known_hosts
+        mkdir -p \$(getent passwd \$(whoami) | cut -d: -f6)/.ssh && ssh-keyscan git.epam.com >> \$(getent passwd \$(whoami) | cut -d: -f6)/.ssh/known_hosts
         if [ ! -d "legion-profiles" ]; then
             git clone ${env.param_legion_profiles_repo} legion-profiles
         fi
