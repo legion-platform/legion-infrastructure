@@ -19,7 +19,7 @@ module "nginx-ingress" {
   region        = var.region
   project_id    = var.project_id
   cluster_name  = var.cluster_name
-  allowed_ips   = [var.allowed_ips]
+  allowed_ips   = var.allowed_ips
   root_domain   = var.root_domain
   dns_zone_name = var.dns_zone_name
   network_name  = var.network_name

@@ -99,6 +99,7 @@ variable "node_version" {
 }
 
 variable "allowed_ips" {
+  type        = list(string)
   description = "CIDR to allow access from"
 }
 

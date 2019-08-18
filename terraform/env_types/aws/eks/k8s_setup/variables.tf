@@ -59,6 +59,7 @@ variable "network_name" {
 # Prometheus monitoring
 ########################
 variable "allowed_ips" {
+  type        = list(string)
   description = "CIDR to allow access from"
 }
 variable "alert_slack_url" {

@@ -20,6 +20,7 @@ variable "network_name" {
 }
 
 variable "allowed_ips" {
+  type        = list(string)
   description = "Subnet ranges to whitelist on cluster"
 }
 
