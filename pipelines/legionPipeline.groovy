@@ -436,10 +436,11 @@ def runRobotTestsAtGcp(tags="") {
             file(credentialsId: "${env.hieraPublicPKCSKey}", variable: 'PublicPkcsKey')]) {
                 withAWS(credentials: 'kops') {
                     wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                        docker.image("${env.param_docker_repo}/legion-pipeline-agent:${env.param_legion_version}").inside("-e HOME=/opt/legion -u root") {
+                        docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root") {
                             stage('Extract Hiera data') {
                                 extractHiera("json")
                             }
+                        docker.image("${env.param_docker_repo}/legion-pipeline-agent:${env.param_legion_version}").inside("-e HOME=/opt/legion -u root") {
                             stage('Run Robot tests') {
                                 dir("${WORKSPACE}"){
                                     def tags_list = tags.toString().trim().split(',')
