@@ -440,6 +440,7 @@ def runRobotTestsAtGcp(tags="") {
                             stage('Extract Hiera data') {
                                 extractHiera("json")
                             }
+                        }
                         docker.image("${env.param_docker_repo}/legion-pipeline-agent:${env.param_legion_version}").inside("-e HOME=/opt/legion -u root") {
                             stage('Run Robot tests') {
                                 dir("${WORKSPACE}"){
