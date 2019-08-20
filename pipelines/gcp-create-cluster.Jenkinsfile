@@ -67,8 +67,6 @@ pipeline {
             script {
                 legion = load "${env.sharedLibPath}"
                 legion.revokeGcpAccess()
-                // remove hiera temp keys
-                sh'rm -rf legion-profiles/*.pkcs7.pem ||true'
             }
             deleteDir()
         }

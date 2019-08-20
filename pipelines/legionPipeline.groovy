@@ -351,6 +351,9 @@ def revokeGcpAccess() {
 
                         # Revoke agent access
                         gcloud compute firewall-rules delete ${env.param_cluster_name}-jenkins-access --project=${env.param_gcp_project} --quiet ||true
+
+                        # Cleanup profiles directory
+                        [ -d ${WORKSPACE}/legion-profiles/ ] && rm -rf ${WORKSPACE}/legion-profiles/
                     """
                 }
             }
