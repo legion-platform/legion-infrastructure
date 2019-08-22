@@ -91,11 +91,6 @@ resource "kubernetes_secret" "tls_legion" {
 ########################################################
 # Install Legion charts
 ########################################################
-data "helm_repository" "legion" {
-  name = "legion_github"
-  url  = var.legion_helm_repo
-}
-
 data "template_file" "legion_values" {
   template = file("${path.module}/templates/legion.yaml")
   vars = {
@@ -129,12 +124,12 @@ resource "helm_release" "legion" {
   chart      = "legion"
   version    = var.legion_version
   namespace  = var.legion_namespace
-  repository = data.helm_repository.legion.metadata[0].name
+  repository = "legion_github"
 
   values = [
     data.template_file.legion_values.rendered,
   ]
 
-  depends_on = [kubernetes_namespace.legion, data.helm_repository.legion]
+  depends_on = [kubernetes_namespace.legion]
 }
 
