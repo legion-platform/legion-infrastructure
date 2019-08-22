@@ -50,6 +50,7 @@ module "auth" {
   oauth_oidc_audience     = var.keycloak_realm_audience
   oauth_cookie_expire     = "168h0m0s"
   oauth_cookie_secret     = var.oauth_cookie_secret
+  oauth_oidc_scope        = var.oauth_scope
 }
 
 module "monitoring" {

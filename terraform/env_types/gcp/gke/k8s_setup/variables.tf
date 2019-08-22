@@ -131,6 +131,10 @@ variable "keycloak_realm_audience" {
   description = "Keycloak real audience"
 }
 
+variable "oauth_scope" {
+  description = "Scope for OAuth"
+}
+
 ########################
 # Istio
 ########################

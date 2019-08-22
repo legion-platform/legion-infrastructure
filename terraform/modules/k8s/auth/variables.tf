@@ -32,7 +32,6 @@ variable "oauth_oidc_audience" {
 }
 variable "oauth_oidc_scope" {
   description = "OAuth 2 Scope"
-  default = "openid profile email offline_access groups"
 }
  
 # OAuth2_proxy configuration
