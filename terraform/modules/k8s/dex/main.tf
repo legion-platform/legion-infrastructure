@@ -58,7 +58,7 @@ data "template_file" "dex_values" {
 
 resource "helm_release" "dex" {
   name          = "dex"
-  chart         = "legion_github/dex"
+  chart         = "legion/dex"
   version       = var.legion_infra_version
   namespace     = "kube-system"
   repository    = "legion"
