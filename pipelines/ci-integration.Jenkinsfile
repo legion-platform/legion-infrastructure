@@ -26,7 +26,8 @@ pipeline {
         //Job parameters
         sharedLibPath = "pipelines/legionPipeline.groovy"
         commitID = null
-        legionInfraVersion = null
+        legionInfraVersion = "1.0.0-20190823152606.418.ab397a9"
+        legionVersion = "1.0.0-20190823152833.707.0b1e6f14"
         mergeBranch = "ci-infra/${params.LegionInfraGitBranch}"
         gcpCredential = "gcp-epmd-legn-legion-automation"
         terraformHome =  "/opt/legion/terraform"
@@ -61,36 +62,36 @@ pipeline {
         stage('Build Legion Infrastructure artifacts') {
             steps {
                 script {
-                    result = build job: env.param_build_legion_infra_job_name, propagate: true, wait: true, parameters: [
-                            [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
-                            string(name: 'EnableDockerCache', value: env.param_enable_docker_cache)
-                    ]
+                    // result = build job: env.param_build_legion_infra_job_name, propagate: true, wait: true, parameters: [
+                    //         [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
+                    //         string(name: 'EnableDockerCache', value: env.param_enable_docker_cache)
+                    // ]
 
-                    buildNumber = result.getNumber()
-                    print 'Finished build id ' + buildNumber.toString()
+                    // buildNumber = result.getNumber()
+                    // print 'Finished build id ' + buildNumber.toString()
 
-                    // Save logs
-                    logFile = result.getRawBuild().getLogFile()
-                    sh """
-                    cat "${logFile.getPath()}" | perl -pe 's/\\x1b\\[8m.*?\\x1b\\[0m//g;' > build-log.txt 2>&1
-                    """
-                    archiveArtifacts 'build-log.txt'
+                    // // Save logs
+                    // logFile = result.getRawBuild().getLogFile()
+                    // sh """
+                    // cat "${logFile.getPath()}" | perl -pe 's/\\x1b\\[8m.*?\\x1b\\[0m//g;' > build-log.txt 2>&1
+                    // """
+                    // archiveArtifacts 'build-log.txt'
 
-                    // Copy artifacts
-                    copyArtifacts filter: '*', flatten: true, fingerprintArtifacts: true, projectName: env.param_build_legion_infra_job_name, selector: specific      (buildNumber.toString()), target: ''
-                    sh 'ls -lah'
+                    // // Copy artifacts
+                    // copyArtifacts filter: '*', flatten: true, fingerprintArtifacts: true, projectName: env.param_build_legion_infra_job_name, selector: specific      (buildNumber.toString()), target: ''
+                    // sh 'ls -lah'
 
-                    // \ Load variables
-                    def map = [:]
-                    def envs = sh returnStdout: true, script: "cat file.env"
+                    // // \ Load variables
+                    // def map = [:]
+                    // def envs = sh returnStdout: true, script: "cat file.env"
 
-                    envs.split("\n").each {
-                        kv = it.split('=', 2)
-                        print "Loaded ${kv[0]} = ${kv[1]}"
-                        map[kv[0]] = kv[1]
-                    }
+                    // envs.split("\n").each {
+                    //     kv = it.split('=', 2)
+                    //     print "Loaded ${kv[0]} = ${kv[1]}"
+                    //     map[kv[0]] = kv[1]
+                    // }
 
-                    legionInfraVersion = map["LEGION_VERSION"]
+                    // legionInfraVersion = map["LEGION_VERSION"]
 
                     print "Loaded version ${legionInfraVersion}"
                     // Load variables
@@ -105,36 +106,36 @@ pipeline {
        stage('Build Legion artifacts') {
            steps {
                script {
-                   result = build job: env.param_build_legion_job_name, propagate: true, wait: true, parameters: [
-                           [$class: 'GitParameterValue', name: 'GitBranch', value: env.param_legion_git_branch],
-                           string(name: 'EnableDockerCache', value: env.param_enable_docker_cache)
-                   ]
+                //    result = build job: env.param_build_legion_job_name, propagate: true, wait: true, parameters: [
+                //            [$class: 'GitParameterValue', name: 'GitBranch', value: env.param_legion_git_branch],
+                //            string(name: 'EnableDockerCache', value: env.param_enable_docker_cache)
+                //    ]
 
-                   buildNumber = result.getNumber()
-                   print 'Finished build id ' + buildNumber.toString()
+                //    buildNumber = result.getNumber()
+                //    print 'Finished build id ' + buildNumber.toString()
 
-                   // Save logs
-                   logFile = result.getRawBuild().getLogFile()
-                   sh """
-                   cat "${logFile.getPath()}" | perl -pe 's/\\x1b\\[8m.*?\\x1b\\[0m//g;' > build-log.txt 2>&1
-                   """
-                   archiveArtifacts 'build-log.txt'
+                //    // Save logs
+                //    logFile = result.getRawBuild().getLogFile()
+                //    sh """
+                //    cat "${logFile.getPath()}" | perl -pe 's/\\x1b\\[8m.*?\\x1b\\[0m//g;' > build-log.txt 2>&1
+                //    """
+                //    archiveArtifacts 'build-log.txt'
 
-                   // Copy artifacts
-                   copyArtifacts filter: '*', flatten: true, fingerprintArtifacts: true, projectName: env.param_build_legion_job_name, selector: specific       (buildNumber.toString()), target: ''
-                   sh 'ls -lah'
+                //    // Copy artifacts
+                //    copyArtifacts filter: '*', flatten: true, fingerprintArtifacts: true, projectName: env.param_build_legion_job_name, selector: specific       (buildNumber.toString()), target: ''
+                //    sh 'ls -lah'
 
-                   // \ Load variables
-                   def map = [:]
-                   def envs = sh returnStdout: true, script: "cat file.env"
+                //    // \ Load variables
+                //    def map = [:]
+                //    def envs = sh returnStdout: true, script: "cat file.env"
 
-                   envs.split("\n").each {
-                       kv = it.split('=', 2)
-                       print "Loaded ${kv[0]} = ${kv[1]}"
-                       map[kv[0]] = kv[1]
-                   }
+                //    envs.split("\n").each {
+                //        kv = it.split('=', 2)
+                //        print "Loaded ${kv[0]} = ${kv[1]}"
+                //        map[kv[0]] = kv[1]
+                //    }
 
-                   legionVersion = map["LEGION_VERSION"]
+                //    legionVersion = map["LEGION_VERSION"]
 
                    print "Loaded version ${legionVersion}"
                    // Load variables
@@ -151,7 +152,7 @@ pipeline {
                script {
                    result = build job: env.param_terminate_cluster_job_name, propagate: true, wait: true, parameters: [
                            [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
-                           string(name: 'GitBranch', value: legionInfraVersion),
+                           string(name: 'LegionInfraVersion', value: legionInfraVersion),
                            string(name: 'ClusterName', value: env.param_cluster_name),
                            string(name: 'LegionProfilesBranch', value: env.param_legion_profiles_branch),
                            string(name: 'CicdRepoGitBranch', value: env.param_legion_cicd_branch)
@@ -208,17 +209,17 @@ pipeline {
                             string(name: 'CicdRepoGitBranch', value: env.param_legion_cicd_branch)
                     ]
                 }
-                print('Remove interim merge branch')
-                sshagent(["${env.gitDeployKey}"]) {
-                    sh """
-                        if [ `git branch | grep ${env.mergeBranch}` ]; then
-                            git branch -D ${env.mergeBranch}
-                            git push origin --delete ${env.mergeBranch}
-                        fi
-                    """
-                }
-                legion = load "${env.sharedLibPath}"
-                legion.notifyBuild(currentBuild.currentResult)
+                // print('Remove interim merge branch')
+                // sshagent(["${env.gitDeployKey}"]) {
+                //     sh """
+                //         if [ `git branch | grep ${env.mergeBranch}` ]; then
+                //             git branch -D ${env.mergeBranch}
+                //             git push origin --delete ${env.mergeBranch}
+                //         fi
+                //     """
+                // }
+                // legion = load "${env.sharedLibPath}"
+                // legion.notifyBuild(currentBuild.currentResult)
             }
         }
         cleanup {
