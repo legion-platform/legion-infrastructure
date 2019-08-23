@@ -27,7 +27,7 @@ provider "aws" {
 # Install Legion dependencies
 ########################################################
 data "helm_repository" "legion" {
-  name = "legion_github"
+  name = "legion"
   url  = var.legion_helm_repo
 }
 

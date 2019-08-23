@@ -61,7 +61,7 @@ resource "helm_release" "dex" {
   chart         = "legion_github/dex"
   version       = var.legion_infra_version
   namespace     = "kube-system"
-  repository    = "legion_github"
+  repository    = "legion"
   recreate_pods = "true"
 
     # set {

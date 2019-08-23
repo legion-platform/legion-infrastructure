@@ -24,7 +24,7 @@ resource "helm_release" "gke_saa" {
   name       = "gke-saa"
   chart      = "k8s-gke-saa"
   version    = var.legion_infra_version
-  repository = "legion_github"
+  repository = "legion"
   namespace  = "kube-system"
 
   values = [

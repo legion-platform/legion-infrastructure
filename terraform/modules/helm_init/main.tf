@@ -76,7 +76,7 @@ resource "null_resource" "add_helm_repository_legion" {
     build_number = "${timestamp()}"
   }
   provisioner "local-exec" {
-    command = "helm repo add legion_github ${var.legion_helm_repo}"
+    command = "helm repo add legion ${var.legion_helm_repo}"
   }
   depends_on = [null_resource.reinit_helm_client]
 }

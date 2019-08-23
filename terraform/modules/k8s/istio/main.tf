@@ -91,5 +91,5 @@ resource "helm_release" "knative" {
   chart         = "knative"
   version       = var.legion_infra_version
   namespace     = var.knative_namespace
-  repository    = "legion_github"
+  repository    = "legion"
 }

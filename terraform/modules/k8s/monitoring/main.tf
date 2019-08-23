@@ -52,7 +52,7 @@ resource "helm_release" "monitoring" {
   chart      = "monitoring"
   version    = var.legion_infra_version
   namespace  = var.monitoring_namespace
-  repository = "legion_github"
+  repository = "legion"
 
   values = [
     data.template_file.monitoring_values.rendered
