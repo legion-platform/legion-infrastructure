@@ -94,10 +94,6 @@ variable "cluster_context" {
   description = "Kubectl cluster context"
 }
 
-variable "github_org_name" {
-  description = "Github Organization for dex authentication"
-}
-
 variable "monitoring_namespace" {
   default     = "kube-monitoring"
   description = "clusterwide monitoring namespace"
