@@ -150,8 +150,8 @@ pipeline {
                         string(name: 'legionInfraVersion', value: legionInfraVersion),
                         string(name: 'ClusterName', value: env.param_cluster_name),
                         string(name: 'LegionProfilesBranch', value: env.param_legion_cicd_branch),
-                        string(name: 'CicdRepoGitBranch', value: env.param_legion_profiles_branch)]
-
+                        string(name: 'CicdRepoGitBranch', value: env.param_legion_profiles_branch)
+                ]
                 legion.notifyBuild(currentBuild.currentResult)
             }
         }
