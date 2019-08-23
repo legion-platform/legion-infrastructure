@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         //Input parameters
-        param_git_branch = "${params.GitBranch}"
+        param_legion_git_branch = "${params.LegionGitBranch}"
         param_cluster_name = "${params.ClusterName}"
         param_enable_docker_cache = "${params.EnableDockerCache}"
         param_deploy_legion = "${params.DeployLegion}"
@@ -45,7 +45,7 @@ pipeline {
            steps {
                script {
                    result = build job: env.param_build_legion_job_name, propagate: true, wait: true, parameters: [
-                           [$class: 'GitParameterValue', name: 'GitBranch', value: env.param_git_branch],
+                           [$class: 'GitParameterValue', name: 'GitBranch', value: env.param_legion_git_branch],
                            string(name: 'EnableDockerCache', value: env.param_enable_docker_cache)
                    ]
 

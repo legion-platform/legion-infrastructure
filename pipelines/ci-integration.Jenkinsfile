@@ -3,7 +3,10 @@ pipeline {
 
     environment {
         //Input parameters
-        param_git_branch = "${params.GitBranch}"
+        param_legion_git_branch = "${params.LegionGitBranch}"
+        param_legion_infra_branch = "${params.LegionInfraGitBranch}"
+        param_legion_cicd_branch = "${params.LegionCicdGitBranch}"
+        param_legion_profiles_branch = "${params.LegionProfilesGitBranch}"
         param_cluster_name = "${params.ClusterName}"
         param_enable_docker_cache = "${params.EnableDockerCache}"
         param_deploy_legion = "${params.DeployLegion}"
@@ -12,17 +15,20 @@ pipeline {
         param_pypi_repo = "${params.PypiRepo}"
         param_docker_repo = "${params.DockerRepo}"
         param_helm_repo = "${params.HelmRepo}"
-        param_build_legion_job_name = "${params.BuildLegionInfraJobName}"
+        param_commitID = "${params.commitID}"
+        param_remainTheCluster = "${params.RemainTheCluster}"
+        // Jobs names
+        param_build_legion_job_name = "${params.BuildLegionJobName}"
+        param_build_legion_infra_job_name = "${params.BuildLegionInfraJobName}"
         param_terminate_cluster_job_name = "${params.TerminateClusterJobName}"
         param_create_cluster_job_name = "${params.CreateClusterJobName}"
-        param_legion_cicd_branch = "${params.CicdRepoGitBranch}"
-        param_legion_profiles_branch = "${params.LegionProfilesBranch}"
+        param_deploy_legion_job_name = "${params.DeployLegionJobName}"
         //Job parameters
         sharedLibPath = "pipelines/legionPipeline.groovy"
+        commitID = null
         legionInfraVersion = null
-        mergeBranch = "ci-infra/${params.GitBranch}"
+        mergeBranch = "ci-infra/${params.LegionInfraGitBranch}"
         gcpCredential = "gcp-epmd-legn-legion-automation"
-        cleanupContainerVersion = "latest"
         terraformHome =  "/opt/legion/terraform"
         gitDeployKey = "epam-legion-deployment-key"
     }
@@ -48,16 +54,59 @@ pipeline {
                     }
                     legion = load "${env.sharedLibPath}"
                     legion.buildDescription()
-                    commitID = env.mergeBranch
                 }
             }
         }
 
-       stage('Build') {
+        stage('Build Legion Infrastructure artifacts') {
+            steps {
+                script {
+                    result = build job: env.param_build_legion_infra_job_name, propagate: true, wait: true, parameters: [
+                            [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
+                            string(name: 'EnableDockerCache', value: env.param_enable_docker_cache)
+                    ]
+
+                    buildNumber = result.getNumber()
+                    print 'Finished build id ' + buildNumber.toString()
+
+                    // Save logs
+                    logFile = result.getRawBuild().getLogFile()
+                    sh """
+                    cat "${logFile.getPath()}" | perl -pe 's/\\x1b\\[8m.*?\\x1b\\[0m//g;' > build-log.txt 2>&1
+                    """
+                    archiveArtifacts 'build-log.txt'
+
+                    // Copy artifacts
+                    copyArtifacts filter: '*', flatten: true, fingerprintArtifacts: true, projectName: env.param_build_legion_infra_job_name, selector: specific      (buildNumber.toString()), target: ''
+                    sh 'ls -lah'
+
+                    // \ Load variables
+                    def map = [:]
+                    def envs = sh returnStdout: true, script: "cat file.env"
+
+                    envs.split("\n").each {
+                        kv = it.split('=', 2)
+                        print "Loaded ${kv[0]} = ${kv[1]}"
+                        map[kv[0]] = kv[1]
+                    }
+
+                    legionInfraVersion = map["LEGION_VERSION"]
+
+                    print "Loaded version ${legionInfraVersion}"
+                    // Load variables
+
+                    if (!legionInfraVersion) {
+                        error 'Cannot get legion release version number'
+                    }
+                }
+            }
+        }
+
+       stage('Build Legion artifacts') {
            steps {
                script {
                    result = build job: env.param_build_legion_job_name, propagate: true, wait: true, parameters: [
-                           [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
+                           [$class: 'GitParameterValue', name: 'GitBranch', value: env.param_legion_git_branch],
                            string(name: 'EnableDockerCache', value: env.param_enable_docker_cache)
                    ]
 
@@ -72,7 +121,7 @@ pipeline {
                    archiveArtifacts 'build-log.txt'
 
                    // Copy artifacts
-                   copyArtifacts filter: '*', flatten: true, fingerprintArtifacts: true, projectName: env.param_build_legion_job_name, selector: specific      (buildNumber.toString()), target: ''
+                   copyArtifacts filter: '*', flatten: true, fingerprintArtifacts: true, projectName: env.param_build_legion_job_name, selector: specific       (buildNumber.toString()), target: ''
                    sh 'ls -lah'
 
                    // \ Load variables
@@ -85,12 +134,12 @@ pipeline {
                        map[kv[0]] = kv[1]
                    }
 
-                   legionInfraVersion = map["LEGION_VERSION"]
+                   legionVersion = map["LEGION_VERSION"]
 
-                   print "Loaded version ${legionInfraVersion}"
+                   print "Loaded version ${legionVersion}"
                    // Load variables
 
-                   if (!legionInfraVersion) {
+                   if (!legionVersion) {
                        error 'Cannot get legion release version number'
                    }
                }
@@ -102,7 +151,7 @@ pipeline {
                script {
                    result = build job: env.param_terminate_cluster_job_name, propagate: true, wait: true, parameters: [
                            [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
-                           string(name: 'LegionInfraVersion', value: legionInfraVersion),
+                           string(name: 'GitBranch', value: legionInfraVersion),
                            string(name: 'ClusterName', value: env.param_cluster_name),
                            string(name: 'LegionProfilesBranch', value: env.param_legion_profiles_branch),
                            string(name: 'CicdRepoGitBranch', value: env.param_legion_cicd_branch)
@@ -125,37 +174,40 @@ pipeline {
            }
        }
 
-       stage('Terminate Cluster') {
+       stage('Deploy Legion & run tests') {
            steps {
                script {
-                   result = build job: env.param_terminate_cluster_job_name, propagate: true, wait: true, parameters: [
+                   result = build job: env.param_deploy_legion_job_name, propagate: true, wait: true, parameters: [
                            [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
-                           string(name: 'LegionInfraVersion', value: legionInfraVersion),
                            string(name: 'ClusterName', value: env.param_cluster_name),
-                           string(name: 'LegionProfilesBranch', value: env.param_legion_profiles_branch),
-                           string(name: 'CicdRepoGitBranch', value: env.param_legion_cicd_branch)
+                           string(name: 'LegionVersion', value: legionVersion),
+                           string(name: 'LegionInfraVersion', value: legionInfraVersion),
+                           string(name: 'TestsTags', value: env.param_tests_tags ?: ""),
+                           string(name: 'commitID', value: env.commitID),
+                           booleanParam(name: 'DeployLegion', value: true),
+                           booleanParam(name: 'UseRegressionTests', value: true),
+                           string(name: 'LegionProfilesBranch', value: env.param_legion_profiles_branch)
                    ]
                }
            }
        }
-    }
+   }
 
     post {
         always {
             script {
-                legion = load "${sharedLibPath}"
-                result = build job: env.param_terminate_cluster_job_name, propagate: true, wait: true, parameters: [
-                        [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
-                        string(name: 'legionInfraVersion', value: legionInfraVersion),
-                        string(name: 'ClusterName', value: env.param_cluster_name),
-                        string(name: 'LegionProfilesBranch', value: env.param_legion_profiles_branch),
-                        string(name: 'CicdRepoGitBranch', value: env.param_legion_cicd_branch)
-                ]
-                legion.notifyBuild(currentBuild.currentResult)
-            }
-        }
-        cleanup {
-            script {
+                if (env.param_remainTheCluster.toBoolean()) {
+                    print("Remaining the cluster for further investigateion")
+                }
+                else {
+                    result = build job: env.param_terminate_cluster_job_name, propagate: true, wait: true, parameters: [
+                            [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
+                            string(name: 'legionInfraVersion', value: legionInfraVersion),
+                            string(name: 'ClusterName', value: env.param_cluster_name),
+                            string(name: 'LegionProfilesBranch', value: env.param_legion_profiles_branch),
+                            string(name: 'CicdRepoGitBranch', value: env.param_legion_cicd_branch)
+                    ]
+                }
                 print('Remove interim merge branch')
                 sshagent(["${env.gitDeployKey}"]) {
                     sh """
@@ -165,7 +217,11 @@ pipeline {
                         fi
                     """
                 }
+                legion = load "${env.sharedLibPath}"
+                legion.notifyBuild(currentBuild.currentResult)
             }
+        }
+        cleanup {
             deleteDir()
         }
     }
