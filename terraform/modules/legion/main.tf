@@ -26,6 +26,11 @@ provider "aws" {
 ########################################################
 # Install Legion dependencies
 ########################################################
+data "helm_repository" "legion" {
+  name = "legion_github"
+  url  = var.legion_helm_repo
+}
+
 resource "kubernetes_namespace" "legion" {
   metadata {
     annotations = {
@@ -124,12 +129,12 @@ resource "helm_release" "legion" {
   chart      = "legion"
   version    = var.legion_version
   namespace  = var.legion_namespace
-  repository = "legion_github"
+  repository = data.helm_repository.legion.metadata[0].name
 
   values = [
     data.template_file.legion_values.rendered,
   ]
 
-  depends_on = [kubernetes_namespace.legion]
+  depends_on = [kubernetes_namespace.legion, data.helm_repository.legion]
 }
 
