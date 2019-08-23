@@ -70,7 +70,6 @@ prometheus-operator:
         - secretName: "${cluster_name}-tls"
           hosts: ["alertmanager.${cluster_name}.${root_domain}"]
       annotations:
-        nginx.ingress.kubernetes.io/auth-response-headers: Authorization
         nginx.ingress.kubernetes.io/configuration-snippet: |-
             set_escape_uri $escaped_request_uri $request_uri;
             auth_request_set $user   $upstream_http_x_auth_request_user; 
@@ -105,7 +104,6 @@ prometheus-operator:
         - secretName: "${cluster_name}-tls"
           hosts: ["prometheus.${cluster_name}.${root_domain}"]
       annotations:
-        nginx.ingress.kubernetes.io/auth-response-headers: Authorization
         nginx.ingress.kubernetes.io/configuration-snippet: |-
             set_escape_uri $escaped_request_uri $request_uri;
             auth_request_set $user   $upstream_http_x_auth_request_user; 
@@ -144,8 +142,7 @@ legion-grafana:
     tls:
       - secretName: "${cluster_name}-tls"
         hosts: ["grafana.${cluster_name}.${root_domain}"]
-    annotations:
-      nginx.ingress.kubernetes.io/auth-response-headers: Authorization        
+    annotations:     
       nginx.ingress.kubernetes.io/configuration-snippet: |-
           set_escape_uri $escaped_request_uri $request_uri;
           auth_request_set $user   $upstream_http_x_auth_request_user; 
