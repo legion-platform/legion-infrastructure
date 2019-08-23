@@ -44,7 +44,7 @@ variable "oauth_image_repository" {
   description = "image repository of oauth2 proxy"
 }
 variable "oauth_image_tag" {
-  default = "master"
+  default = "v4.0.0"
   description = "image tag of oauth2 proxy"
 }
 # OAuth2_proxy cookie configuration
