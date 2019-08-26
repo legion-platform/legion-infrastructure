@@ -169,7 +169,8 @@ def deployLegionToGCP() {
 
                                 # Setup Kube api access
                                 gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${env.param_gcp_zone} --project=${env.param_gcp_project}
-                                gcloud container clusters update ${env.param_cluster_name} --zone ${env.param_gcp_zone} --enable-master-authorized-networks --master-authorized-networks "${env.agentWanIp}/32"
+                                #TODO remove this
+                                # gcloud container clusters update ${env.param_cluster_name} --zone ${env.param_gcp_zone} --enable-master-authorized-networks --master-authorized-networks "${env.agentWanIp}/32"
 
                                 # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
                                 helm init --client-only
@@ -230,10 +231,10 @@ def destroyGcpCluster() {
 
                                     terraformRun("destroy", "cluster_dns", "-var=\"zone_type=FORWARDING\" -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\"", "${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns", "bucket=${env.param_cluster_name}-tfstate")
 
-                                    sh"""
-                                    gcloud compute firewall-rules delete ${env.param_cluster_name}-jenkins-access --project=${env.param_gcp_project} --quiet ||true
-                                    """
-                                    terraformRun("destroy", "gke_create", "-var=\"agent_cidr=${env.agentWanIp}/32\"")
+                                    // sh"""
+                                    // gcloud compute firewall-rules delete ${env.param_cluster_name}-jenkins-access --project=${env.param_gcp_project} --quiet ||true
+                                    // """
+                                    terraformRun("destroy", "gke_create")
                                 }
                             }
                         }
@@ -326,13 +327,13 @@ def setupGcpAccess() {
 
         # Setup Kube api access
         gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${env.param_gcp_zone} --project=${env.param_gcp_project}
-        gcloud container clusters update ${env.param_cluster_name} --zone ${env.param_gcp_zone} --enable-master-authorized-networks --master-authorized-networks "${env.agentWanIp}/32"
+        # gcloud container clusters update ${env.param_cluster_name} --zone ${env.param_gcp_zone} --enable-master-authorized-networks --master-authorized-networks "${env.agentWanIp}/32"
 
         # Setup firewall rule
-        gcloud compute firewall-rules create ${env.param_cluster_name}-jenkins-access \
-        --project=${env.param_gcp_project} --network=${env.param_cluster_name}-vpc \
-        --description "Allow incoming traffic from Jenkins agent" \
-        --allow tcp:443 --direction INGRESS --source-ranges="${env.agentWanIp}/32"
+        #gcloud compute firewall-rules create ${env.param_cluster_name}-jenkins-access \
+        #--project=${env.param_gcp_project} --network=${env.param_cluster_name}-vpc \
+        #--description "Allow incoming traffic from Jenkins agent" \
+        #--allow tcp:443 --direction INGRESS --source-ranges="${env.agentWanIp}/32"
         """
 }
 
@@ -347,10 +348,10 @@ def revokeGcpAccess() {
                         gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
 
                         # Revoke Kube api access by setting allowed cidrs as loopback host
-                        gcloud container clusters update ${env.param_cluster_name} --zone ${env.param_gcp_zone} --master-authorized-networks '127.0.0.1/32' ||true
+                        # gcloud container clusters update ${env.param_cluster_name} --zone ${env.param_gcp_zone} --master-authorized-networks '127.0.0.1/32' ||true
 
                         # Revoke agent access
-                        gcloud compute firewall-rules delete ${env.param_cluster_name}-jenkins-access --project=${env.param_gcp_project} --quiet ||true
+                        # gcloud compute firewall-rules delete ${env.param_cluster_name}-jenkins-access --project=${env.param_gcp_project} --quiet ||true
 
                         # Cleanup profiles directory
                         [ -d ${WORKSPACE}/legion-profiles/ ] && rm -rf ${WORKSPACE}/legion-profiles/
