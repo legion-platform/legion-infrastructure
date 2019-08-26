@@ -4,6 +4,7 @@ pipeline {
     environment {
         //Input parameters
         param_legion_git_branch = "${params.LegionGitBranch}"
+        param_legion_infra_branch = "${params.LegionInfraGitBranch}"
         param_cluster_name = "${params.ClusterName}"
         param_enable_docker_cache = "${params.EnableDockerCache}"
         param_deploy_legion = "${params.DeployLegion}"
@@ -89,7 +90,7 @@ pipeline {
            steps {
                script {
                    result = build job: env.param_terminate_cluster_job_name, propagate: true, wait: true, parameters: [
-                           [$class: 'GitParameterValue', name: 'GitBranch', value: env.param_legion_infra_version],
+                           [$class: 'GitParameterValue', name: 'GitBranch', value: env.param_legion_infra_branch],
                            string(name: 'LegionInfraVersion', value: env.param_legion_infra_version),
                            string(name: 'ClusterName', value: env.param_cluster_name),
                            string(name: 'LegionProfilesBranch', value: env.param_legion_cicd_branch),
@@ -103,7 +104,7 @@ pipeline {
            steps {
                script {
                    result = build job: env.param_create_cluster_job_name, propagate: true, wait: true, parameters: [
-                           [$class: 'GitParameterValue', name: 'GitBranch', value: env.param_legion_infra_version],
+                           [$class: 'GitParameterValue', name: 'GitBranch', value: env.param_legion_infra_branch],
                            string(name: 'ClusterName', value: env.param_cluster_name),
                            string(name: 'LegionInfraVersion', value: env.param_legion_infra_version),
                            booleanParam(name: 'SkipKops', value: false),
@@ -118,7 +119,7 @@ pipeline {
            steps {
                script {
                    result = build job: env.param_deploy_legion_job_name, propagate: true, wait: true, parameters: [
-                           [$class: 'GitParameterValue', name: 'GitBranch', value: env.param_legion_infra_version],
+                           [$class: 'GitParameterValue', name: 'GitBranch', value: env.param_legion_infra_branch],
                            string(name: 'ClusterName', value: env.param_cluster_name),
                            string(name: 'LegionVersion', value: legionVersion),
                            string(name: 'LegionInfraVersion', value: env.param_legion_infra_version),
@@ -137,7 +138,7 @@ pipeline {
         always {
             script {
                 result = build job: env.param_terminate_cluster_job_name, propagate: true, wait: true, parameters: [
-                        [$class: 'GitParameterValue', name: 'GitBranch', value: param_legion_infra_version],
+                        [$class: 'GitParameterValue', name: 'GitBranch', value: param_legion_infra_branch],
                         string(name: 'LegionInfraVersion', value: param_legion_infra_version),
                         string(name: 'ClusterName', value: env.param_cluster_name),
                         string(name: 'LegionProfilesBranch', value: env.param_legion_cicd_branch),
