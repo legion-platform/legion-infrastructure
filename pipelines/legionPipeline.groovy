@@ -6,45 +6,10 @@ def buildDescription(){
     }
 }
 
-def ansibleDebugRunCheck(String debugRun) {
-    // Run ansible playbooks and helm charts from sources in workspace and use verbose output for debug purposes
-    if (debugRun == "true" ) {
-      ansibleHome =  "${WORKSPACE}/ansible"
-      ansibleVerbose = '-vvv'
-    } else {
-      ansibleHome = env.ansibleHome
-      ansibleVerbose = env.ansibleVerbose
-    }
-}
-
 def getWanIp() {
     agentWanIp = sh returnStdout: true, script: "curl -s http://checkip.amazonaws.com/ |tr -d '\n'"
     print("Running on: " + agentWanIp)
     env.agentWanIp = agentWanIp
-}
-
-def createCluster() {
-    withCredentials([
-    file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Create cluster') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook create-cluster.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile} \
-                        legion_infra_version=${env.param_legion_infra_version} \
-                        skip_kops=${env.param_skip_kops} \
-                        helm_repo=${env.param_helm_repo}" 
-                        """
-                    }
-                }
-            }
-        }
-    }
 }
 
 def createGCPCluster() {
@@ -101,52 +66,6 @@ def createGCPCluster() {
     }
 }
 
-def terminateCluster() {
-    withCredentials([
-    file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Terminate cluster') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook terminate-cluster.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile}"
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
-def deployLegion() {
-    withCredentials([
-    file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Deploy Legion') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook deploy-legion.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile} \
-                        legion_version=${env.param_legion_version}  \
-                        pypi_repo=${env.param_pypi_repo} \
-                        helm_repo=${env.param_helm_repo} \
-                        docker_repo=${env.param_docker_repo} \
-                        model_reference=${commitID}"
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
 
 def deployLegionToGCP() {
     withCredentials([
@@ -262,28 +181,6 @@ def legionScope(Closure body) {
     }
 }
 
-def updateTLSCert() {
-    withCredentials([
-    file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Reissue TLS Certificates') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook update-tls-certificate.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile} \
-                        vault_pass=${vault}"
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
 def updateTLSCertGCP() {
     withCredentials([
     file(credentialsId: "${env.gcpCredential}", variable: 'gcpCredential')]) {
@@ -304,22 +201,6 @@ def updateTLSCertGCP() {
     }
 }
 
-def downloadSecrets(String vault) {
-    sh """
-        set -e
-        export CLUSTER_NAME="${env.param_profile}"
-        export PATH_TO_PROFILE_FILE="profiles/${env.param_profile}.yml"
-        export CLUSTER_STATE_STORE=\"\$(yq -r .state_store \$PATH_TO_PROFILE_FILE)\"
-        echo \"Loading kubectl config from \$CLUSTER_STATE_STORE for cluster \$CLUSTER_NAME\"
-        export CREDENTIAL_SECRETS=".secrets.yaml"
-
-        aws s3 cp \$CLUSTER_STATE_STORE/vault/${env.param_profile} \$CLUSTER_NAME
-        ansible-vault decrypt --vault-password-file=${vault} --output \$CREDENTIAL_SECRETS \$CLUSTER_NAME
-
-        kops export kubecfg --name \$CLUSTER_NAME --state \$CLUSTER_STATE_STORE
-    """
-}
-
 def setupGcpAccess() {
     sh """
         set -ex
@@ -329,76 +210,6 @@ def setupGcpAccess() {
         # Setup Kube api access
         gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${env.param_gcp_zone} --project=${env.param_gcp_project}
         """
-}
-
-def runRobotTests(tags="") {
-    withCredentials([
-    file(credentialsId: "${env.credentials_name}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/legion-pipeline-agent:${env.param_legion_version}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Run Robot tests') {
-                        dir("${WORKSPACE}"){
-                            def tags_list = tags.toString().trim().split(',')
-                            def robot_tags = []
-                            def nose_tags = []
-
-                            for (item in tags_list) {
-                                if (item.startsWith('-')) {
-                                    item = item.replace("-","")
-                                    robot_tags.add(" -e ${item}")
-                                    nose_tags.add(" -a !${item}")
-                                    }
-                                else if (item?.trim()) {
-                                    robot_tags.add(" -i ${item}")
-                                    nose_tags.add(" -a ${item}")
-                                }
-                            }
-
-                            env.robot_tags= robot_tags.join(" ")
-                            env.nose_tags = nose_tags.join(" ")
-
-                            downloadSecrets(vault)
-
-                            sh """
-                                cp .secrets.yaml /opt/legion/
-                                cd /opt/legion
-
-                                echo "Starting robot tests"
-                                make CLUSTER_NAME=${env.param_profile} \
-                                     LEGIONCTL_NONINTERACTIVE=1 \
-                                     LEGION_VERSION=${env.param_legion_version} e2e-robot || true
-
-                                cp -R target/ ${WORKSPACE}
-                            """
-
-                            robot_report = sh(script: 'find target/ -name "*.xml" | wc -l', returnStdout: true)
-
-                            if (robot_report.toInteger() > 0) {
-                                step([
-                                    $class : 'RobotPublisher',
-                                    outputPath : 'target/',
-                                    outputFileName : "*.xml",
-                                    disableArchiveOutput : false,
-                                    passThreshold : 100,
-                                    unstableThreshold: 95.0,
-                                    onlyCritical : true,
-                                    otherFiles : "*.png",
-                                ])
-                            }
-                            else {
-                                echo "No '*.xml' files for generating robot report"
-                                currentBuild.result = 'UNSTABLE'
-                            }
-
-                            // Cleanup
-                            sh "rm -rf ${WORKSPACE}/target/"
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 def runRobotTestsAtGcp(tags="") {
@@ -478,94 +289,6 @@ def runRobotTestsAtGcp(tags="") {
                             }
                         }
                     }
-                }
-            }
-        }
-    }
-}
-
-def deployLegionEnclave() {
-    withCredentials([
-        file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion/ansible -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Deploy Legion') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook deploy-legion.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile} \
-                        legion_version=${env.param_legion_version} \
-                        pypi_repo=${env.param_pypi_repo} \
-                        docker_repo=${env.param_docker_repo} \
-                        helm_repo=${env.param_helm_repo} \
-                        enclave_name=${env.param_enclave_name}"
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
-def terminateLegionEnclave() {
-    withCredentials([
-        file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion/ansible -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Terminate Legion Enclave') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook terminate-legion-enclave.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile} \
-                        enclave_name=${env.param_enclave_name}"
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
-def cleanupClusterSg(String cleanupContainerVersion) {
-    withCredentials([
-    file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${cleanupContainerVersion}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Cleanup Cluster SG') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook cleanup-cluster-sg.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile}" 
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
-def authorizeJenkinsAgent() {
-    withCredentials([
-    file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    sh """
-                    cd ${ansibleHome} && \
-                    ansible-playbook authorize-jenkins-agent.yml \
-                    ${ansibleVerbose} \
-                    --vault-password-file=${vault} \
-                    --extra-vars "profile=${env.param_profile}" 
-                    """
                 }
             }
         }
