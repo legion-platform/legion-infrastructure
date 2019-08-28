@@ -56,7 +56,7 @@ def createGCPCluster() {
                             }
                             stage('Cleanup workspace') {
                                 // Cleanup profiles directory
-                                sh"[ -d ${WORKSPACE}/legion-profiles/ ] && rm -rf ${WORKSPACE}/legion-profiles/"
+                                sh"rm -rf ${WORKSPACE}/legion-profiles/ ||true"
                             }
                         }
                     }
@@ -101,7 +101,7 @@ def deployLegionToGCP() {
                                 terraformRun("apply", "legion", "${tfDeployVars}")
 
                                 // Cleanup profiles directory
-                                sh" [ -d ${WORKSPACE}/legion-profiles/ ] && rm -rf ${WORKSPACE}/legion-profiles/"
+                                sh"rm -rf ${WORKSPACE}/legion-profiles/ ||true"
                             }
                         }
                     }
@@ -154,7 +154,7 @@ def destroyGcpCluster() {
                                     terraformRun("destroy", "gke_create")
                                  
                                     // Cleanup profiles directory
-                                    sh" [ -d ${WORKSPACE}/legion-profiles/ ] && rm -rf ${WORKSPACE}/legion-profiles/"
+                                    sh"rm -rf ${WORKSPACE}/legion-profiles/ ||true"
                                 }
                             }
                         }
@@ -264,7 +264,7 @@ def runRobotTestsAtGcp(tags="") {
                                     sh "rm -rf ${WORKSPACE}/target/"
 
                                     // Cleanup profiles directory
-                                    sh" [ -d ${WORKSPACE}/legion-profiles/ ] && rm -rf ${WORKSPACE}/legion-profiles/"
+                                    sh"rm -rf ${WORKSPACE}/legion-profiles/ ||true"
                                 }
                             }
                         }
