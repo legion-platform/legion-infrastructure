@@ -23,8 +23,6 @@ def createGCPCluster() {
                     wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
                         docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root") {
                             stage('Extract Hiera data') {
-                                // Cleanup profiles directory
-                                sh" [ -d ${WORKSPACE}/legion-profiles/ ] && rm -rf ${WORKSPACE}/legion-profiles/"
                                 extractHiera("json")
                             }
                             stage('Create GCP resources') {
@@ -80,8 +78,6 @@ def deployLegionToGCP() {
                     wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
                         docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -u root") {
                             stage('Extract Hiera data') {
-                                    // Cleanup profiles directory
-                                    sh" [ -d ${WORKSPACE}/legion-profiles/ ] && rm -rf ${WORKSPACE}/legion-profiles/"
                                     extractHiera("json")
                                 }
                             stage('Deploy Legion') {
@@ -126,8 +122,6 @@ def destroyGcpCluster() {
                     wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
                         docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root") {
                             stage('Extract Hiera data') {
-                                // Cleanup profiles directory
-                                sh" [ -d ${WORKSPACE}/legion-profiles/ ] && rm -rf ${WORKSPACE}/legion-profiles/"
                                 extractHiera("json")
                             }
                             stage('Remove Legion cluster if exists') {
