@@ -201,29 +201,34 @@ pipeline {
                     print("Remaining the cluster for further investigateion")
                 }
                 else {
+                    print(env.legionInfraVersion)
                     result = build job: env.param_terminate_cluster_job_name, propagate: true, wait: true, parameters: [
-                            [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
-                            string(name: 'legionInfraVersion', value: env.legionInfraVersion),
-                            string(name: 'ClusterName', value: env.param_cluster_name),
-                            string(name: 'LegionProfilesBranch', value: env.param_legion_profiles_branch),
-                            string(name: 'CicdRepoGitBranch', value: env.param_legion_cicd_branch)
+                           [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
+                           string(name: 'LegionInfraVersion', value: env.legionInfraVersion),
+                           string(name: 'ClusterName', value: env.param_cluster_name),
+                           string(name: 'LegionProfilesBranch', value: env.param_legion_profiles_branch),
+                           string(name: 'CicdRepoGitBranch', value: env.param_legion_cicd_branch)
                     ]
                 }
-                // print('Remove interim merge branch')
-                // sshagent(["${env.gitDeployKey}"]) {
-                //     sh """
-                //         if [ `git branch | grep ${env.mergeBranch}` ]; then
-                //             git branch -D ${env.mergeBranch}
-                //             git push origin --delete ${env.mergeBranch}
-                //         fi
-                //     """
-                // }
-                // legion = load "${env.sharedLibPath}"
-                // legion.notifyBuild(currentBuild.currentResult)
+                print('Remove interim merge branch')
+                sshagent(["${env.gitDeployKey}"]) {
+                    sh """
+                        if [ `git branch | grep ${env.mergeBranch}` ]; then
+                            git branch -D ${env.mergeBranch}
+                            git push origin --delete ${env.mergeBranch}
+                        fi
+                    """
+                }
+                legion = load "${env.sharedLibPath}"
+                legion.notifyBuild(currentBuild.currentResult)
             }
         }
         cleanup {
-            deleteDir()
+            script {
+                legion = load "${env.sharedLibPath}"
+                legion.cleanupTempFiles()
+            }
+            deleteDir()        
         }
     }
 }

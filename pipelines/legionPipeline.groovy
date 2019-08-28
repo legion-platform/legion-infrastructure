@@ -338,6 +338,18 @@ def terraformOutput(tfModule, params = '-json', workPath="${terraformHome}/env_t
      """
  }
 
+def cleanupTempFiles() {
+    docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-u root") {
+        stage('Cleanup Workspace') {
+            sh"""
+            # Cleanup Hiera data
+            rm -rf ${WORKSPACE}/cluster_profile.json || true
+            rm -rf ${WORKSPACE}/legion-profiles/ || true
+            """
+        }   
+    }
+}
+
 def setBuildMeta(updateVersionScript) {
 
     Globals.rootCommit = sh returnStdout: true, script: 'git rev-parse --short HEAD 2> /dev/null | sed  "s/\\(.*\\)/\\1/"'
