@@ -26,8 +26,8 @@ pipeline {
         //Job parameters
         sharedLibPath = "pipelines/legionPipeline.groovy"
         commitID = null
-        legionInfraVersion = "1.0.0-20190823152606.418.ab397a9"
-        legionVersion = "1.0.0-20190823152833.707.0b1e6f14"
+        legionInfraVersion = "1.0.0-20190828093433.435.5faf35a"
+        legionVersion = "1.0.0-20190826091438.714.0b1e6f14"
         mergeBranch = "ci-infra/${params.LegionInfraGitBranch}"
         gcpCredential = "gcp-epmd-legn-legion-automation"
         terraformHome =  "/opt/legion/terraform"
@@ -152,7 +152,7 @@ pipeline {
                script {
                    result = build job: env.param_terminate_cluster_job_name, propagate: true, wait: true, parameters: [
                            [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
-                           string(name: 'LegionInfraVersion', value: legionInfraVersion),
+                           string(name: 'LegionInfraVersion', value: env.legionInfraVersion),
                            string(name: 'ClusterName', value: env.param_cluster_name),
                            string(name: 'LegionProfilesBranch', value: env.param_legion_profiles_branch),
                            string(name: 'CicdRepoGitBranch', value: env.param_legion_cicd_branch)
@@ -167,7 +167,7 @@ pipeline {
                    result = build job: env.param_create_cluster_job_name, propagate: true, wait: true, parameters: [
                            [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
                            string(name: 'ClusterName', value: env.param_cluster_name),
-                           string(name: 'LegionInfraVersion', value: legionInfraVersion),
+                           string(name: 'LegionInfraVersion', value: env.legionInfraVersion),
                            string(name: 'LegionProfilesBranch', value: env.param_legion_profiles_branch),
                            string(name: 'CicdRepoGitBranch', value: env.param_legion_cicd_branch)
                    ]
@@ -181,8 +181,8 @@ pipeline {
                    result = build job: env.param_deploy_legion_job_name, propagate: true, wait: true, parameters: [
                            [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
                            string(name: 'ClusterName', value: env.param_cluster_name),
-                           string(name: 'LegionVersion', value: legionVersion),
-                           string(name: 'LegionInfraVersion', value: legionInfraVersion),
+                           string(name: 'LegionVersion', value: env.legionVersion),
+                           string(name: 'LegionInfraVersion', value: env.legionInfraVersion),
                            string(name: 'TestsTags', value: env.param_tests_tags ?: ""),
                            string(name: 'commitID', value: env.commitID),
                            booleanParam(name: 'DeployLegion', value: true),
@@ -203,7 +203,7 @@ pipeline {
                 else {
                     result = build job: env.param_terminate_cluster_job_name, propagate: true, wait: true, parameters: [
                             [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
-                            string(name: 'legionInfraVersion', value: legionInfraVersion),
+                            string(name: 'legionInfraVersion', value: env.legionInfraVersion),
                             string(name: 'ClusterName', value: env.param_cluster_name),
                             string(name: 'LegionProfilesBranch', value: env.param_legion_profiles_branch),
                             string(name: 'CicdRepoGitBranch', value: env.param_legion_cicd_branch)
