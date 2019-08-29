@@ -145,6 +145,7 @@ pipeline {
                         string(name: 'CicdRepoGitBranch', value: env.param_legion_profiles_branch)
                 ]
                 legion = load "${env.sharedLibPath}"
+                GitBranch = env.param_legion_git_branch
                 legion.notifyBuild(currentBuild.currentResult)
             }
         }

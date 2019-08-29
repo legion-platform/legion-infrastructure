@@ -220,6 +220,7 @@ pipeline {
                     """
                 }
                 legion = load "${env.sharedLibPath}"
+                GitBranch = env.mergeBranch
                 legion.notifyBuild(currentBuild.currentResult)
             }
         }
