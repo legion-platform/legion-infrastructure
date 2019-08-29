@@ -132,6 +132,8 @@ def destroyGcpCluster() {
                                 cluster_status = sh(script: "gcloud container clusters list --zone ${env.param_gcp_zone}", returnStdout: true)
                                 if (!cluster_status.contains("${env.param_cluster_name}")) {
                                     currentBuild.result = 'SUCCESS'
+                                    // Cleanup profiles directory
+                                    sh"rm -rf ${WORKSPACE}/legion-profiles/ ||true"
                                     return
                                 }
                                 else {
@@ -337,18 +339,6 @@ def terraformOutput(tfModule, params = '-json', workPath="${terraformHome}/env_t
         terraform output ${params}
      """
  }
-
-def cleanupTempFiles(legion_infra_version) {
-    docker.image("${env.param_docker_repo}/k8s-terraform:${legion_infra_version}").inside("-u root") {
-        stage('Cleanup Workspace') {
-            sh"""
-            # Cleanup Hiera data
-            rm -rf ${WORKSPACE}/cluster_profile.json || true
-            rm -rf ${WORKSPACE}/legion-profiles/ || true
-            """
-        }   
-    }
-}
 
 def setBuildMeta(updateVersionScript) {
 

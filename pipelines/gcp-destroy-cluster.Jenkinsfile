@@ -67,7 +67,6 @@ pipeline {
         cleanup {
             script {
                 legion = load "${env.sharedLibPath}"
-                legion.cleanupTempFiles(env.legionInfraVersion)
             }
             deleteDir()
         }
