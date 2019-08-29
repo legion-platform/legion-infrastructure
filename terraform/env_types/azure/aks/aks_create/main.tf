@@ -1,78 +1,61 @@
-########################################################
-# Networking
-########################################################
-module "vpc" {
-  source                      = "../../../../modules/azure/networking/vpc"
-  project_id                  = "${var.project_id}"
-  region                      = "${var.region}"
-  zone                        = "${var.zone}"
-  cluster_name                = "${var.cluster_name}"
-  subnet_cidr                 = "${var.azure_cidr}"
+locals {
+  common_tags = merge(
+    { "cluster" = var.cluster_name },
+    var.aks_common_tags)
 }
 
-module "firewall" {
-  source                      = "../../../../modules/azure/networking/firewall"
-  project_id                  = "${var.project_id}"
-  region                      = "${var.region}"
-  zone                        = "${var.zone}"
-  allowed_ips                 = "${var.allowed_ips}"
-  cluster_name                = "${var.cluster_name}"
-  network_name                = "${module.vpc.network_name}"
-  bastion_tag                 = "${var.bastion_tag}"
+module "aks_resource_group" {
+  source   = "../../../../modules/azure/resource_group"
+  name     = "${var.cluster_name}-rg"
+  tags     = local.common_tags
+  location = var.azure_location
 }
 
-module "vpc_peering" {
-  source                      = "../../../../modules/azure/networking/vpc_peering"
-  project_id                  = "${var.project_id}"
-  region                      = "${var.region}"
-  zone                        = "${var.zone}"
-  cluster_name                = "${var.cluster_name}"
-  region_aws                  = "${var.region_aws}"
-  aws_profile                 = "${var.aws_profile}"
-  aws_credentials_file        = "${var.aws_credentials_file}"
-  aws_vpc_id                  = "${var.aws_vpc_id}"
-  azure_cidr                  = "${var.azure_cidr}"
-  aws_sg                      = "${var.aws_sg}"
-  aws_cidr                    = "${var.aws_cidr}"
-  azure_network               = "${module.vpc.network_name}"
-  aws_route_table_id          = "${var.aws_route_table_id}"
+module "azure_monitoring" {
+  source   = "../../../../modules/azure/azure_monitoring"
+  cluster_name   = var.cluster_name
+  tags           = local.common_tags
+  location       = module.aks_resource_group.location
+  resource_group = module.aks_resource_group.name
 }
 
-########################################################
-# IAM
-########################################################
-module "iam" {
-  source                      = "../../../../modules/azure/iam"
-  project_id                  = "${var.project_id}"
-  cluster_name                = "${var.cluster_name}"
-  region                      = "${var.region}"
-  zone                        = "${var.zone}"
+module "aks_vpc" {
+  source         = "../../../../modules/azure/networking/vpc"
+  cluster_name   = var.cluster_name
+  tags           = local.common_tags
+  location       = module.aks_resource_group.location
+  resource_group = module.aks_resource_group.name
+  subnet_cidr    = var.aks_cidr
 }
 
-########################################################
-# GKE Cluster
-########################################################
-module "gke_cluster" {
-  source                      = "../../../../modules/azure/aks_cluster"
-  project_id                  = "${var.project_id}"
-  cluster_name                = "${var.cluster_name}"
-  region                      = "${var.region}"
-  zone                        = "${var.zone}"
-  region_aws                  = "${var.region_aws}"
-  aws_profile                 = "${var.aws_profile}"
-  aws_credentials_file        = "${var.aws_credentials_file}"
-  location                    = "${var.location}"
-  allowed_ips                 = "${var.allowed_ips}"
-  agent_cidr                  = "${var.agent_cidr}"
-  nodes_sa                    = "${module.iam.service_account}"
-  location                    = "${var.location}"
-  network                     = "${module.vpc.network_name}"
-  subnetwork                  = "${module.vpc.subnet_name}"
-  dns_zone_name               = "${var.dns_zone_name}"
-  root_domain                 = "${var.root_domain}"
-  secrets_storage             = "${var.secrets_storage}"
-  k8s_version                 = "${var.k8s_version}"
-  node_version                = "${var.node_version}"
-  bastion_tag                 = "${var.bastion_tag}"
-  gke_node_tag                = "${var.gke_node_tag}"
+# module "aks_vpc_firewall" {
+#   source                      = "../../../../modules/azure/networking/firewall"
+#   cluster_name                = var.cluster_name
+#   allowed_ips                 = var.allowed_ips
+#   network_name                = module.aks_vpc.subnet_name
+#   tags                        = local.common_tags
+# }
+
+module "aks_cluster" {
+  source                     = "../../../../modules/azure/aks_cluster"
+  cluster_name               = var.cluster_name
+  secrets_storage            = var.secrets_storage
+  aks_tags                   = local.common_tags
+  location                   = module.aks_resource_group.location
+  resource_group             = module.aks_resource_group.name
+  aks_dns_prefix             = var.aks_dns_prefix
+  aks_subnet_id              = module.aks_vpc.subnet_id
+  sp_id                      = var.azure_client_id
+  sp_secret                  = var.azure_client_secret
+  k8s_version                = var.k8s_version
+  node_machine_type          = var.node_machine_type
+  node_disk_size_gb          = var.node_disk_size_gb
+  aks_num_nodes_min          = var.aks_num_nodes_min
+  aks_num_nodes_max          = var.aks_num_nodes_max
+  aks_analytics_workspace_id = module.azure_monitoring.workspace_id
+}
+
+resource "local_file" "kubeconfig" {
+  sensitive_content = module.aks_cluster.kube_config
+  filename          = "/root/.kube/config"
 }
