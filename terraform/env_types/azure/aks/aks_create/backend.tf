@@ -1,11 +1,3 @@
 terraform {
-  backend "gcs" {
-    prefix  = "aks_create"
-  }
+  backend "azurerm" {}
 }
-
-# terraform {
-#   backend "local" {
-#     path = "../../../../_tfstate/state.tfstate"
-#   }
-# }
