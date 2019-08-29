@@ -96,10 +96,6 @@ variable "aks_num_nodes_max" {
   default = "5"
   description = "Number of nodes in each aks cluster zone"
 }
-variable "nodes_sa" {
-  default = "default"
-  description = "Service account for cluster nodes"
-}
 
 ################
 # Bastion host
