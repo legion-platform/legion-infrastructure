@@ -1,93 +1,93 @@
-##################
-# Common
-##################
-variable "project_id" {
-  description = "Target project id"
+############################################################################################################
+
+variable "azure_tenant_id" {
+  description = "Azure Tenant ID"
 }
-variable "cluster_name" {
-  default     = "legion"
-  description = "Legion cluster name"
+
+variable "azure_subscription_id" {
+  description = "Azure Subscription ID tied to the tenant"
 }
+
+variable "azure_client_id" {
+  description = "Azure Service Principal account ID"
+}
+
+variable "azure_client_secret" {
+  description = "Azure Service Principal account secret"
+}
+
+variable "azure_location" {
+  description = "Azure location in which the resource group will be created"
+  default     = "eastus"
+}
+
 variable "aws_profile" {
   description = "AWS profile name"
 }
+
 variable "aws_credentials_file" {
-  default     = "~/.aws/config"
   description = "AWS credentials file location"
 }
-variable "zone" {
-  default     = "us-east1-b"
-  description = "Default zone"
-}
-variable "region" {
-  default = "us-east1"
-  description = "Region of resources"
-}
-variable "region_aws" {
-  default = "us-east-2"
+
+variable "aws_region" {
   description = "Region of AWS resources"
 }
+
 variable "secrets_storage" {
-  description = "Cluster secrets storage"
-}
-variable "root_domain" {
-  description = "Legion cluster root domain"
-}
-variable "aws_vpc_id" {
-  description = "AWS VPC id to establish peering with"
-}
-variable "azure_cidr" {
-  description = "azure network CIDR"
-}
-variable "aws_sg" {
-  description = "AWS SG id for azure access"
-}
-variable "aws_cidr" {
-  description = "AWS network CIDR"
-}
-variable "aws_route_table_id" {
-  description = "AWS Route table ID"
-}
-variable "aks_node_tag" {
-  description = "aks cluster nodes tag"
+  description = "Name of S3 bucket with TLS artifacts"
 }
 
-#############
-# aks
-#############
-variable "location" {
-  default = "us-east1-b"
-  description = "The location (region or zone) in which the cluster master will be created"
+############################################################################################################
+
+variable "cluster_name" {
+  description = "Legion k8s cluster name"
+  default     = "legion"
 }
+
+variable "aks_common_tags" {
+  description = "Set of common tags assigned to all cluster resources"
+  type        = "map"
+  default     = {
+    environment = "Development"
+    purpose     = "Kubernetes Cluster"
+  }
+}
+
+variable "aks_dns_prefix" {
+  description = "DNS prefix for Kubernetes cluster"
+  default     = "k8stest"
+}
+
+variable "aks_cidr" {
+  default = "10.255.0.0/24"  
+}
+
 variable "k8s_version" {
-  default = "1.13.6"
   description = "Kubernetes master version"
+  default     = "1.13.10"
 }
-variable "node_version" {
-  description = "K8s version for Nodes. If no value is provided, this defaults to the value of k8s_version."
-  default     = "1.13.6-aks.6"
-}
+
 variable "allowed_ips" {
   description = "CIDR to allow access from"
 }
-variable "agent_cidr" {
-  description = "Jenkins agent CIDR to allow access for CI jobs or your WAN address in case of locla run"
-}
-variable "dns_zone_name" {
-  description = "Cluster root DNS zone name"
-}
+
+#variable "agent_cidr" {
+#  description = "Jenkins agent CIDR to allow access for CI jobs or your WAN address in case of locla run"
+#}
+#variable "dns_zone_name" {
+#  description = "Cluster root DNS zone name"
+#}
 
 #############
 # Node pool
 #############
 variable "node_disk_size_gb" {
-  default = "20"
   description = "Persistent disk size for cluster worker nodes"
 }
-variable "aks_node_machine_type" {
-  default = "n1-standard-2"
+variable "node_machine_type" {
   description = "Machine type of aks nodes"
 }
+
 variable "aks_num_nodes_min" {
   default = "1"
   description = "Number of nodes in each aks cluster zone"
