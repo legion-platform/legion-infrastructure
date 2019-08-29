@@ -338,8 +338,8 @@ def terraformOutput(tfModule, params = '-json', workPath="${terraformHome}/env_t
      """
  }
 
-def cleanupTempFiles() {
-    docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-u root") {
+def cleanupTempFiles(legion_infra_version) {
+    docker.image("${env.param_docker_repo}/k8s-terraform:${legion_infra_version}").inside("-u root") {
         stage('Cleanup Workspace') {
             sh"""
             # Cleanup Hiera data
