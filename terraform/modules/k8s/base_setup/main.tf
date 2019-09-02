@@ -15,15 +15,6 @@ provider "aws" {
 ########################################################
 # K8S Cluster Setup
 ########################################################
-data "aws_s3_bucket_object" "tls-secret-key" {
-  bucket = var.secrets_storage
-  key    = "${var.cluster_name}/tls/${var.cluster_name}.key"
-}
-
-data "aws_s3_bucket_object" "tls-secret-crt" {
-  bucket = var.secrets_storage
-  key    = "${var.cluster_name}/tls/${var.cluster_name}.fullchain.crt"
-}
 
 # Install TLS cert as a secret
 resource "kubernetes_secret" "tls_default" {
@@ -33,9 +24,8 @@ resource "kubernetes_secret" "tls_default" {
     namespace = element(var.tls_namespaces, count.index)
   }
   data = {
-    "tls.key" = data.aws_s3_bucket_object.tls-secret-key.body
-    "tls.crt" = data.aws_s3_bucket_object.tls-secret-crt.body
+    "tls.key" = var.tls_key
+    "tls.crt" = var.tls_crt
   }
   type = "kubernetes.io/tls"
 }
-

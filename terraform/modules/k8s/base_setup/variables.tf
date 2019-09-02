@@ -39,3 +39,10 @@ variable "tls_namespaces" {
   description = "Default namespaces with TLS secret"
 }
 
+variable "tls_crt" {
+  description = "TLS secret (certificate)"
+}
+
+variable "tls_key" {
+  description = "TLS secret (key)"
+}
