@@ -12,5 +12,8 @@ locals {
 # Helm initialization
 ########################################################
 module "helm_init" {
-  source = "../../../../modules/helm_init"
+  source           = "../../../../modules/helm_init"
+  tiller_image     = var.tiller_image
+  legion_helm_repo = var.legion_helm_repo
+  istio_helm_repo  = var.istio_helm_repo
 }

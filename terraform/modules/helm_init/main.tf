@@ -1,16 +1,3 @@
-provider "kubernetes" {
-  config_context_auth_info = var.config_context_auth_info
-  config_context_cluster   = var.config_context_cluster
-}
-
-provider "helm" {
-  version         = "v0.10.0"
-  install_tiller  = true
-  namespace       = "kube-system"
-  service_account = "tiller"
-  tiller_image    = ""
-}
-
 ##############
 # HELM Init
 ##############
@@ -44,13 +31,79 @@ resource "null_resource" "install_tiller" {
   provisioner "local-exec" {
     command = "helm init --tiller-image ${var.tiller_image} --service-account tiller"
   }
+  provisioner "local-exec" {
+    when    = "destroy"
+    command = "kubectl delete deployment tiller-deploy -n kube-system"
+  }
+  provisioner "local-exec" {
+    when    = "destroy"
+    command = "kubectl delete service tiller-deploy -n kube-system"
+  }
   depends_on = [kubernetes_cluster_role_binding.tiller]
 }
 
 resource "null_resource" "wait_for_tiller" {
+  triggers = {
+    build_number = "${timestamp()}"
+  }
   provisioner "local-exec" {
     command = "timeout 60 bash -c 'until kubectl get pods -n kube-system |grep tiller; do sleep 5; done'"
   }
   depends_on = [null_resource.install_tiller]
 }
 
+#########################
+# add HELM repositories
+#########################
+
+resource "null_resource" "reinit_helm_client" {
+  triggers = {
+    build_number = "${timestamp()}"
+  }
+  provisioner "local-exec" {
+    command = "helm init --client-only"
+  }
+    depends_on = [null_resource.wait_for_tiller]
+}
+
+resource "null_resource" "add_helm_repository_stable" {
+  triggers = {
+    build_number = "${timestamp()}"
+  }
+  provisioner "local-exec" {
+    command = "helm repo add stable https://kubernetes-charts.storage.googleapis.com"
+}
+  provisioner "local-exec" {
+    when    = "destroy"
+    command = "helm repo rm stable"
+  }
+  depends_on = [null_resource.reinit_helm_client]
+}
+
+resource "null_resource" "add_helm_repository_legion" {
+  triggers = {
+    build_number = "${timestamp()}"
+  }
+  provisioner "local-exec" {
+    command = "helm repo add legion ${var.legion_helm_repo}"
+  }
+  provisioner "local-exec" {
+    when    = "destroy"
+    command = "helm repo rm legion"
+  }
+  depends_on = [null_resource.add_helm_repository_stable]
+}
+
+resource "null_resource" "add_helm_repository_istio" {
+  triggers = {
+    build_number = "${timestamp()}"
+  }
+  provisioner "local-exec" {
+    command = "helm repo add istio ${var.istio_helm_repo}"
+  }
+  provisioner "local-exec" {
+    when    = "destroy"
+    command = "helm repo rm istio"
+  }
+  depends_on = [null_resource.add_helm_repository_legion]
+}
