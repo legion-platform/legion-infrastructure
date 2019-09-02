@@ -48,11 +48,25 @@ module "aks_cluster" {
   sp_id                      = var.azure_client_id
   sp_secret                  = var.azure_client_secret
   k8s_version                = var.k8s_version
+  ssh_user                   = "ubuntu"
+  ssh_public_key             = data.aws_s3_bucket_object.ssh_public_key.body
   node_machine_type          = var.node_machine_type
   node_disk_size_gb          = var.node_disk_size_gb
   aks_num_nodes_min          = var.aks_num_nodes_min
   aks_num_nodes_max          = var.aks_num_nodes_max
-  aks_analytics_workspace_id = module.azure_monitoring.workspace_id
+  aks_analytics_enabled      = var.azure_monitoring_enabled
+  #aks_analytics_workspace_id = module.azure_monitoring.workspace_id
+}
+
+module "aks_bastion_host" {
+  source                 = "../../../../modules/azure/bastion"
+  cluster_name           = var.cluster_name
+  location               = module.aks_resource_group.location
+  resource_group         = module.aks_resource_group.name
+  aks_subnet_id          = module.aks_vpc.subnet_id
+  bastion_ssh_user       = "ubuntu"
+  bastion_ssh_public_key = data.aws_s3_bucket_object.ssh_public_key.body
+  bastion_tags           = local.common_tags
 }
 
 resource "local_file" "kubeconfig" {

@@ -97,18 +97,20 @@ variable "aks_num_nodes_max" {
   description = "Number of nodes in each aks cluster zone"
 }
 
-# ################
-# # Bastion host
-# ################
-# variable "bastion_machine_type" {
-#   default = "Standard_B2s"
-# }
-# variable "bastion_tags" {
-#   default     = {}
-#   description = "Bastion host tags"
-#   type        = "map"
-# }
-# variable "bastion_hostname" {
-#   default = "bastion"
-#   description = "bastion hostname"
-# }
+################
+# Bastion host
+################
+variable "bastion_machine_type" {
+  default = "Standard_B1ls"
+}
+
+variable "bastion_tags" {
+  default     = {}
+  description = "Bastion host tags"
+  type        = "map"
+}
+
+variable "bastion_hostname" {
+  default = "bastion"
+  description = "bastion hostname"
+}
