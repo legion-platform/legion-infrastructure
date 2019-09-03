@@ -4,6 +4,16 @@ locals {
     var.aks_common_tags)
 }
 
+########################################################
+# Retrieve SSH key from secrets_storage
+# TODO: move to separate module
+########################################################
+
+data "aws_s3_bucket_object" "ssh_public_key" {
+  bucket = var.secrets_storage
+  key    = "${var.cluster_name}/ssh/${var.cluster_name}.pub"
+}
+
 module "aks_resource_group" {
   source   = "../../../../modules/azure/resource_group"
   name     = "${var.cluster_name}-rg"
