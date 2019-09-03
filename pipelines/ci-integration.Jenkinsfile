@@ -16,7 +16,7 @@ pipeline {
         param_docker_repo = "${params.DockerRepo}"
         param_helm_repo = "${params.HelmRepo}"
         param_commitID = "${params.commitID}"
-        param_remainTheCluster = "${params.RemainTheCluster}"
+        param_remain_the_cluster = "${params.RemainTheCluster}"
         // Jobs names
         param_build_legion_job_name = "${params.BuildLegionJobName}"
         param_build_legion_infra_job_name = "${params.BuildLegionInfraJobName}"
@@ -195,11 +195,10 @@ pipeline {
     post {
         always {
             script {
-                if (env.param_remainTheCluster.toBoolean()) {
+                if (env.param_remain_the_cluster.toBoolean()) {
                     print("Remaining the cluster for further investigateion")
                 }
                 else {
-                    print(env.legionInfraVersion)
                     result = build job: env.param_terminate_cluster_job_name, propagate: true, wait: true, parameters: [
                            [$class: 'GitParameterValue', name: 'GitBranch', value: env.mergeBranch],
                            string(name: 'LegionInfraVersion', value: legionInfraVersion),
