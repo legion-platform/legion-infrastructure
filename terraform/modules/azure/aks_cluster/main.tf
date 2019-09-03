@@ -1,14 +1,4 @@
 ########################################################
-# Retrieve SSH key from secrets_storage
-# TODO: move to separate module
-########################################################
-
-data "aws_s3_bucket_object" "ssh_public_key" {
-  bucket = var.secrets_storage
-  key    = "${var.cluster_name}/ssh/${var.cluster_name}.pub"
-}
-
-########################################################
 # Deploy AKS cluster
 ########################################################
 
@@ -26,7 +16,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   linux_profile {
     admin_username = var.ssh_user
     ssh_key {
-      key_data = data.aws_s3_bucket_object.ssh_public_key.body
+      key_data = var.ssh_public_key
     }
   }
 
@@ -39,7 +29,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     count               = var.aks_num_nodes_min
 
     type                = "VirtualMachineScaleSets"
-    enable_auto_scaling = "true"
+    enable_auto_scaling = true
     min_count           = var.aks_num_nodes_min
     max_count           = var.aks_num_nodes_max
     #availability_zones  = ["1", "2"]
@@ -67,14 +57,17 @@ resource "azurerm_kubernetes_cluster" "aks" {
     client_secret = var.sp_secret
   }
 
-  addon_profile {
-    # TODO: add condition
-    oms_agent {
-      enabled                    = true
-      log_analytics_workspace_id = var.aks_analytics_workspace_id
-    }
-  }
+  #addon_profile {
+    # dynamic "oms_agent" {
+    #   for_each = local.oms_agent_map
 
+    #   content {
+    #     enabled                    = oms_agent_map.key
+    #     log_analytics_workspace_id = oms_agent_map.value
+    #   }
+    # }
+  #}
+  
   role_based_access_control {
     enabled = true
   }
@@ -97,68 +90,4 @@ resource "azurerm_public_ip" "ext_ip" {
   resource_group_name = azurerm_kubernetes_cluster.aks.node_resource_group
   allocation_method   = "Static"
   tags                = var.aks_tags
-}
-
-########################################################
-# Bastion host
-# TODO: move to separate module
-########################################################
-
-resource "azurerm_network_interface" "aks_bastion_nic" {
-  name                = "${var.bastion_hostname}-${var.cluster_name}-nic"
-  location            = var.location
-  resource_group_name = var.resource_group
-
-  ip_configuration {
-    name                          = "bastionip"
-    subnet_id                     = var.aks_subnet_id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.aks_bastion_publicip.id
-  }
-}
-
-resource "azurerm_public_ip" "aks_bastion_publicip" {
-  name                = "${var.cluster_name}-bastion"
-  location            = var.location
-  resource_group_name = var.resource_group
-  allocation_method   = "Static"
-  tags                = var.bastion_tags
-}
-
-resource "azurerm_virtual_machine" "aks_bastion" {
-  name                  = "${var.bastion_hostname}-${var.cluster_name}"
-  location              = var.location
-  resource_group_name   = var.resource_group
-  network_interface_ids = [ azurerm_network_interface.aks_bastion_nic.id ]
-  vm_size               = var.bastion_machine_type
-
-  delete_os_disk_on_termination = true
-  delete_data_disks_on_termination = true
-
-  storage_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
-  }
-  storage_os_disk {
-    name              = "${var.bastion_hostname}-os"
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
-  }
-  os_profile {
-    computer_name  = "${var.bastion_hostname}-${var.cluster_name}"
-    admin_username = var.ssh_user
-  }
-  os_profile_linux_config {
-    disable_password_authentication = true
-    ssh_keys {
-      path     = "/home/${var.ssh_user}/.ssh/authorized_keys"
-      key_data = data.aws_s3_bucket_object.ssh_public_key.body
-    }
-  }
-  tags = var.bastion_tags
-
-  depends_on = [azurerm_kubernetes_cluster.aks]
 }

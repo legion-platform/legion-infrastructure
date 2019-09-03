@@ -9,3 +9,7 @@ output "kube_config" {
 output "lb_ip_address" {
   value = azurerm_public_ip.ext_ip.ip_address
 }
+
+output "lb_ip_address_id" {
+  value = azurerm_public_ip.ext_ip.id
+}

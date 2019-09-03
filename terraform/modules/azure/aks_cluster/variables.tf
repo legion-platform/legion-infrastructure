@@ -1,11 +1,8 @@
-variable "secrets_storage" {
-  description = "Name of S3 bucket with TLS artifacts"
-}
-
 variable "cluster_name" {
   description = "Legion k8s cluster name"
   default     = "legion"
 }
+
 variable "location" {
   description = "Azure location where the resource group should be created"
 }
@@ -23,6 +20,10 @@ variable "k8s_version" {
 variable "ssh_user" {
   default     = "ubuntu"
   description = "Default ssh user"
+}
+
+variable "ssh_public_key" {
+  description = "SSH public key provided to default ssh user"
 }
 
 variable "aks_dns_prefix" {
@@ -80,17 +81,4 @@ variable "aks_num_nodes_max" {
 variable "aks_highcpu_num_nodes_max" {
   default     = "2"
   description = "Maximum number of nodes in High CPU node pool"
-}
-
-variable "bastion_machine_type" {
-  default = "Standard_B1ls"
-}
-variable "bastion_tags" {
-  default     = {}
-  description = "Bastion host tags"
-  type        = "map"
-}
-variable "bastion_hostname" {
-  default     = "bastion"
-  description = "bastion hostname"
 }
