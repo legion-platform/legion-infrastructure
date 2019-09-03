@@ -11,13 +11,14 @@ module "aks_resource_group" {
   location = var.azure_location
 }
 
-module "azure_monitoring" {
-  source   = "../../../../modules/azure/azure_monitoring"
-  cluster_name   = var.cluster_name
-  tags           = local.common_tags
-  location       = module.aks_resource_group.location
-  resource_group = module.aks_resource_group.name
-}
+# module "azure_monitoring" {
+#   source   = "../../../../modules/azure/azure_monitoring"
+#   enabled        = var.azure_monitoring_enabled
+#   cluster_name   = var.cluster_name
+#   tags           = local.common_tags
+#   location       = module.aks_resource_group.location
+#   resource_group = module.aks_resource_group.name
+# }
 
 module "aks_vpc" {
   source         = "../../../../modules/azure/networking/vpc"
@@ -28,18 +29,9 @@ module "aks_vpc" {
   subnet_cidr    = var.aks_cidr
 }
 
-# module "aks_vpc_firewall" {
-#   source                      = "../../../../modules/azure/networking/firewall"
-#   cluster_name                = var.cluster_name
-#   allowed_ips                 = var.allowed_ips
-#   network_name                = module.aks_vpc.subnet_name
-#   tags                        = local.common_tags
-# }
-
 module "aks_cluster" {
   source                     = "../../../../modules/azure/aks_cluster"
   cluster_name               = var.cluster_name
-  secrets_storage            = var.secrets_storage
   aks_tags                   = local.common_tags
   location                   = module.aks_resource_group.location
   resource_group             = module.aks_resource_group.name
@@ -57,6 +49,18 @@ module "aks_cluster" {
   aks_analytics_enabled      = var.azure_monitoring_enabled
   #aks_analytics_workspace_id = module.azure_monitoring.workspace_id
 }
+
+# module "aks_vpc_firewall" {
+#   source           = "../../../../modules/azure/networking/firewall"
+#   cluster_name     = var.cluster_name
+#   location         = module.aks_resource_group.location
+#   resource_group   = module.aks_resource_group.name
+#   allowed_ips      = var.allowed_ips
+#   lb_ip_address_id = module.aks_cluster.lb_ip_address_id
+#   lb_ip_address    = module.aks_cluster.lb_ip_address
+#   subnet_id        = module.aks_vpc.subnet_id
+#   tags             = local.common_tags
+# }
 
 module "aks_bastion_host" {
   source                 = "../../../../modules/azure/bastion"
