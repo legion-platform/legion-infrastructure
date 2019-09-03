@@ -24,3 +24,7 @@ provider "local" {
 provider "null" {
   version = "~> 2.1"
 }
+
+provider "http" {
+  version = "~> 1.1"
+}
