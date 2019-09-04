@@ -24,7 +24,7 @@ def createGCPCluster() {
                         docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root") {
                             stage('Extract Hiera data') {
                                 extractHiera("json")
-                                gcp_zone = sh(script: "jq '.zone' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
+                                gcp_zone = sh(script: "jq '.location' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
                                 gcp_project_id = sh(script: "jq '.project_id' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
                             }
                             stage('Create GCP resources') {
@@ -81,7 +81,7 @@ def deployLegionToGCP() {
                         docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -u root") {
                             stage('Extract Hiera data') {
                                     extractHiera("json")
-                                    gcp_zone = sh(script: "jq '.zone' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
+                                    gcp_zone = sh(script: "jq '.location' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
                                     gcp_project_id = sh(script: "jq '.project_id' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
                                 }
                             stage('Deploy Legion') {
@@ -91,7 +91,7 @@ def deployLegionToGCP() {
                                 gcloud auth activate-service-account --key-file=${gcpCredential} --project=${gcp_project_id}
 
                                 # Setup Kube api access
-                                gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${egcp_zone} --project=${gcp_project_id}
+                                gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${gcp_zone} --project=${gcp_project_id}
 
                                 # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
                                 helm init --client-only
@@ -127,7 +127,7 @@ def destroyGcpCluster() {
                         docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root") {
                             stage('Extract Hiera data') {
                                 extractHiera("json")
-                                gcp_zone = sh(script: "jq '.zone' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
+                                gcp_zone = sh(script: "jq '.location' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
                                 gcp_project_id = sh(script: "jq '.project_id' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
                             }
                             stage('Remove Legion cluster if exists') {
@@ -196,7 +196,7 @@ def setupGcpAccess() {
         gcloud auth activate-service-account --key-file=${gcpCredential} --project=${gcp_project_id}
 
         # Setup Kube api access
-        gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${gcp_zone} --project=${gcp_project_id}
+        gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${gcp_zone}
         """
 }
 
@@ -212,7 +212,7 @@ def runRobotTestsAtGcp(tags="") {
                         docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root") {
                             stage('Extract Hiera data') {
                                 extractHiera("json")
-                                gcp_zone = sh(script: "jq '.zone' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
+                                gcp_zone = sh(script: "jq '.location' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
                                 gcp_project_id = sh(script: "jq '.project_id' ${WORKSPACE}/cluster_profile.json", returnStdout: true)
                             }
                         }
