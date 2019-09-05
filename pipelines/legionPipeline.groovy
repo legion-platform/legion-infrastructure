@@ -197,6 +197,9 @@ def setupGcpAccess() {
 
         # Setup Kube api access
         gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${gcp_zone}
+
+        # Show k8s context
+        kubectl config get-contexts |grep ${env.param_cluster_name} || echo "Warning: No cluster context found!"
         """
 }
 

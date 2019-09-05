@@ -28,7 +28,6 @@ pipeline {
         commitID = null
         legionInfraVersion = null
         legionVersion = null
-        mergeBranch = "ci-infra/${params.LegionInfraGitBranch}"
         gcpCredential = "gcp-epmd-legn-legion-automation"
         terraformHome =  "/opt/legion/terraform"
         gitDeployKey = "epam-legion-deployment-key"
@@ -40,19 +39,6 @@ pipeline {
                 cleanWs()
                 checkout scm
                 script {
-                    // print('Set interim merge branch')
-                    // sshagent(["${env.gitDeployKey}"]) {
-                    //     sh """
-                    //     echo ${env.mergeBranch}
-                    //     if [ `git branch | grep ${env.mergeBranch}` ]; then
-                    //         echo 'Removing existing git tag'
-                    //         git branch -D ${env.mergeBranch}
-                    //         git push origin --delete ${env.mergeBranch}
-                    //     fi
-                    //     git branch ${env.mergeBranch}
-                    //     git push origin ${env.mergeBranch}
-                    //     """
-                    // }
                     legion = load "${env.sharedLibPath}"
                     legion.buildDescription()
                 }
@@ -205,15 +191,6 @@ pipeline {
                            string(name: 'CicdRepoGitBranch', value: env.param_legion_cicd_branch)
                     ]
                 }
-                // print('Remove interim merge branch')
-                // sshagent(["${env.gitDeployKey}"]) {
-                //     sh """
-                //         if [ `git branch | grep ${env.mergeBranch}` ]; then
-                //             git branch -D ${env.mergeBranch}
-                //             git push origin --delete ${env.mergeBranch}
-                //         fi
-                //     """
-                // }
                 legion = load "${env.sharedLibPath}"
                 GitBranch = env.param_legion_git_branch
                 legion.notifyBuild(currentBuild.currentResult)
