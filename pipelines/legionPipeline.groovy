@@ -38,7 +38,7 @@ def createGCPCluster() {
 
                                 sh """
                                 # Authorize Kube api access
-                                gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${gcp_zone} --project=${gcp_project_id}
+                                gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${gcp_zone}
                                 """
                             }
                             stage('Init HELM') {
@@ -91,7 +91,7 @@ def deployLegionToGCP() {
                                 gcloud auth activate-service-account --key-file=${gcpCredential} --project=${gcp_project_id}
 
                                 # Setup Kube api access
-                                gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${gcp_zone} --project=${gcp_project_id}
+                                gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${gcp_zone}
 
                                 # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
                                 helm init --client-only
