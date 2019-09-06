@@ -75,7 +75,7 @@ resource "null_resource" "add_helm_repository_stable" {
 }
   provisioner "local-exec" {
     when    = "destroy"
-    command = "helm repo rm stable"
+    command = "helm repo rm stable || true"
   }
   depends_on = [null_resource.reinit_helm_client]
 }
@@ -89,7 +89,7 @@ resource "null_resource" "add_helm_repository_legion" {
   }
   provisioner "local-exec" {
     when    = "destroy"
-    command = "helm repo rm legion"
+    command = "helm repo rm legion || true"
   }
   depends_on = [null_resource.add_helm_repository_stable]
 }
@@ -103,7 +103,7 @@ resource "null_resource" "add_helm_repository_istio" {
   }
   provisioner "local-exec" {
     when    = "destroy"
-    command = "helm repo rm istio"
+    command = "helm repo rm istio || true"
   }
   depends_on = [null_resource.add_helm_repository_legion]
 }
