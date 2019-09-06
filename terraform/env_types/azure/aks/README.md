@@ -6,6 +6,17 @@
 $ az login --service-principal -u CLIENT_ID -p CLIENT_SECRET --tenant TENANT_ID
 ```
 
+- Turn on all necessary Azure Preview functions:
+```bash
+$ az extension add --name aks-preview
+$ az feature register --namespace Microsoft.ContainerService -n EnableSingleIPPerCCP
+$ az feature register --namespace Microsoft.ContainerService -n APIServerSecurityPreview
+$ az feature register --namespace Microsoft.ContainerService -n MultiAgentpoolPreview
+$ az feature register --namespace Microsoft.ContainerService -n VMSSPreview
+$ az feature register --namespace Microsoft.ContainerService -n AvailabilityZonePreview
+$ az provider register -n Microsoft.ContainerService
+```
+
 - Create resource group for Terraform remote backend and all base resources of AKS cluster:
 ```bash
 $ export RG="legion-test"
