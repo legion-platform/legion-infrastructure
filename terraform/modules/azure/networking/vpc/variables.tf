@@ -12,7 +12,11 @@ variable "resource_group" {
 }
 
 variable "subnet_cidr" {
-  description = "VPC subnet range"
+  description = "AKS worker nodes subnet range"
+}
+
+variable "fw_subnet_cidr" {
+  description = "Firewall subnet address range"
 }
 
 variable "tags" {
