@@ -14,11 +14,9 @@ data "aws_s3_bucket_object" "ssh_public_key" {
   key    = "${var.cluster_name}/ssh/${var.cluster_name}.pub"
 }
 
-module "aks_resource_group" {
-  source   = "../../../../modules/azure/resource_group"
-  name     = "${var.cluster_name}-rg"
-  tags     = local.common_tags
-  location = var.azure_location
+data "azurerm_public_ip" "aks_ext" {
+  name                = var.public_ip_name
+  resource_group_name = var.azure_resource_group
 }
 
 # module "azure_monitoring" {
@@ -34,9 +32,10 @@ module "aks_vpc" {
   source         = "../../../../modules/azure/networking/vpc"
   cluster_name   = var.cluster_name
   tags           = local.common_tags
-  location       = module.aks_resource_group.location
-  resource_group = module.aks_resource_group.name
+  location       = var.azure_location
+  resource_group = var.azure_resource_group
   subnet_cidr    = var.aks_cidr
+  fw_subnet_cidr = var.fw_cidr
 }
 
 module "aks_bastion_host" {
@@ -53,8 +52,8 @@ module "aks_cluster" {
   source                     = "../../../../modules/azure/aks_cluster"
   cluster_name               = var.cluster_name
   aks_tags                   = local.common_tags
-  location                   = module.aks_resource_group.location
-  resource_group             = module.aks_resource_group.name
+  location                   = var.azure_location
+  resource_group             = var.azure_resource_group
   aks_dns_prefix             = var.aks_dns_prefix
   aks_subnet_id              = module.aks_vpc.subnet_id
   sp_id                      = var.azure_client_id

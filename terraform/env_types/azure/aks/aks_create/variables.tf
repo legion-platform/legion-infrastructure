@@ -21,6 +21,13 @@ variable "azure_location" {
   default     = "eastus"
 }
 
+variable "azure_resource_group" {
+  description = "Azure base resource group name"
+  default     = "legion-rg"
+}
+
+############################################################################################################
+
 variable "aws_profile" {
   description = "AWS profile name"
 }
@@ -63,7 +70,13 @@ variable "aks_dns_prefix" {
 }
 
 variable "aks_cidr" {
-  default = "10.255.0.0/24"  
+  description = "Overall VPC address space for all subnets in it"
+  default     = "10.255.255.0/24"
+}
+
+variable "fw_cidr" {
+  description = "Firewall-related subnet CIDR, it must be at least /26 for deploying a AzureFirewall"
+  default     = "172.72.72.0/26"
 }
 
 variable "k8s_version" {
