@@ -1,6 +1,6 @@
 data "azurerm_kubernetes_cluster" "aks" {
   name                = var.cluster_name
-  resource_group_name = "${var.cluster_name}-rg"
+  resource_group_name = var.azure_resource_group
 }
 
 locals {

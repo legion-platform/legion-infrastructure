@@ -16,6 +16,11 @@ variable "azure_client_secret" {
   description = "Azure Service Principal account secret"
 }
 
+variable "azure_resource_group" {
+  description = "Azure base resource group name"
+  default     = "legion-rg"
+}
+
 variable "aws_profile" {
   description = "AWS profile name"
 }

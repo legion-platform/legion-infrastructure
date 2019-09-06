@@ -1,12 +1,12 @@
 data "azurerm_kubernetes_cluster" "aks" {
   name                = var.cluster_name
-  resource_group_name = "${var.cluster_name}-rg"
 }
 
 data "azurerm_public_ip" "ext_ip" {
   name                = "${var.cluster_name}-extip"
   resource_group_name = data.azurerm_kubernetes_cluster.aks.node_resource_group
   depends_on          = [data.azurerm_kubernetes_cluster.aks]
+  resource_group_name = var.azure_resource_group
 }
 
 locals {
@@ -19,7 +19,6 @@ module "get_tls" {
   secrets_storage = var.secrets_storage
   cluster_name    = var.cluster_name
 }
-
 
 ########################################################
 # K8S setup
