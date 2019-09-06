@@ -48,6 +48,21 @@ module "aks_bastion_host" {
   bastion_tags     = local.common_tags
 }
 
+module "aks_firewall" {
+  source          = "../../../../modules/azure/networking/firewall"
+  cluster_name    = var.cluster_name
+  location        = var.azure_location
+  resource_group  = var.azure_resource_group
+  vpc_name        = module.aks_vpc.name
+  aks_subnet_name = module.aks_vpc.subnet_name
+  aks_subnet_cidr = var.aks_cidr
+  fw_subnet_cidr  = var.fw_cidr
+  public_ip_name  = var.public_ip_name
+  bastion_ip      = module.aks_bastion_host.private_ip
+  allowed_ips     = var.allowed_ips
+  tags            = local.common_tags
+}
+
 module "aks_cluster" {
   source                     = "../../../../modules/azure/aks_cluster"
   cluster_name               = var.cluster_name
