@@ -87,3 +87,24 @@ resource "local_file" "kubeconfig" {
   sensitive_content = module.aks_cluster.kube_config
   filename          = "/root/.kube/config"
 }
+
+resource "null_resource" "bastion_kubeconfig" {
+  connection {
+    host = data.azurerm_public_ip.aks_ext.ip_address
+    user = "ubuntu"
+    type = "ssh"
+    private_key = module.aks_bastion_host.deploy_privkey
+    timeout = "1m"
+    agent = false
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "printf \"${data.aws_s3_bucket_object.ssh_public_key.body}\" >> ~/.ssh/authorized_keys",
+      "sudo wget -qO /usr/local/bin/kubectl \"https://storage.googleapis.com/kubernetes-release/release/v${var.k8s_version}/bin/linux/amd64/kubectl\"",
+      "sudo chmod +x /usr/local/bin/kubectl",
+      "mkdir -p ~/.kube && printf \"${module.aks_cluster.kube_config}\" > ~/.kube/config"
+    ]
+  }
+  depends_on = [ module.aks_bastion_host, module.aks_firewall, module.aks_cluster ]
+}
