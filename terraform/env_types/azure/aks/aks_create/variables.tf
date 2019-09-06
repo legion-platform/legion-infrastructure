@@ -46,6 +46,11 @@ variable "secrets_storage" {
 
 ############################################################################################################
 
+variable "aks_analytics_workspace_id" {
+  description = "Azure Log Analytics workspace ID"
+  default     = "my-test-default-variable-eica0Chi"
+}
+
 variable "cluster_name" {
   description = "Legion k8s cluster name"
   default     = "legion"

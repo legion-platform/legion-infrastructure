@@ -19,14 +19,14 @@ data "azurerm_public_ip" "aks_ext" {
   resource_group_name = var.azure_resource_group
 }
 
-# module "azure_monitoring" {
-#   source   = "../../../../modules/azure/azure_monitoring"
-#   enabled        = var.azure_monitoring_enabled
-#   cluster_name   = var.cluster_name
-#   tags           = local.common_tags
-#   location       = module.aks_resource_group.location
-#   resource_group = module.aks_resource_group.name
-# }
+module "azure_monitoring" {
+  source   = "../../../../modules/azure/azure_monitoring"
+  enabled        = var.azure_monitoring_enabled
+  cluster_name   = var.cluster_name
+  tags           = local.common_tags
+  location       = var.azure_location
+  resource_group = var.azure_resource_group
+}
 
 module "aks_vpc" {
   source         = "../../../../modules/azure/networking/vpc"
@@ -65,31 +65,7 @@ module "aks_cluster" {
   node_disk_size_gb          = var.node_disk_size_gb
   aks_num_nodes_min          = var.aks_num_nodes_min
   aks_num_nodes_max          = var.aks_num_nodes_max
-  aks_analytics_enabled      = var.azure_monitoring_enabled
-  #aks_analytics_workspace_id = module.azure_monitoring.workspace_id
-}
-
-# module "aks_vpc_firewall" {
-#   source           = "../../../../modules/azure/networking/firewall"
-#   cluster_name     = var.cluster_name
-#   location         = module.aks_resource_group.location
-#   resource_group   = module.aks_resource_group.name
-#   allowed_ips      = var.allowed_ips
-#   lb_ip_address_id = module.aks_cluster.lb_ip_address_id
-#   lb_ip_address    = module.aks_cluster.lb_ip_address
-#   subnet_id        = module.aks_vpc.subnet_id
-#   tags             = local.common_tags
-# }
-
-module "aks_bastion_host" {
-  source                 = "../../../../modules/azure/bastion"
-  cluster_name           = var.cluster_name
-  location               = module.aks_resource_group.location
-  resource_group         = module.aks_resource_group.name
-  aks_subnet_id          = module.aks_vpc.subnet_id
-  bastion_ssh_user       = "ubuntu"
-  bastion_ssh_public_key = data.aws_s3_bucket_object.ssh_public_key.body
-  bastion_tags           = local.common_tags
+  aks_analytics_workspace_id = module.azure_monitoring.workspace_id
 }
 
 resource "local_file" "kubeconfig" {

@@ -1,3 +1,8 @@
+variable "enabled" {
+  description = "Enabled this module or not (true/false)"
+  default     = false
+}
+
 variable "cluster_name" {
   description = "Legion k8s cluster name"
   default     = "legion"

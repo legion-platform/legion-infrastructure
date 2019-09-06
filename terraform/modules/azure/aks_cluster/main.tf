@@ -57,17 +57,13 @@ resource "azurerm_kubernetes_cluster" "aks" {
     client_secret = var.sp_secret
   }
 
-  #addon_profile {
-    # dynamic "oms_agent" {
-    #   for_each = local.oms_agent_map
+  addon_profile {
+    oms_agent {
+      enabled                    = true
+      log_analytics_workspace_id = var.aks_analytics_workspace_id
+    }
+  }
 
-    #   content {
-    #     enabled                    = oms_agent_map.key
-    #     log_analytics_workspace_id = oms_agent_map.value
-    #   }
-    # }
-  #}
-  
   role_based_access_control {
     enabled = true
   }
