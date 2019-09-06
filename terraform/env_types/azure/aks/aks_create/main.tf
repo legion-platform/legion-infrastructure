@@ -21,7 +21,6 @@ data "azurerm_public_ip" "aks_ext" {
 
 module "azure_monitoring" {
   source   = "../../../../modules/azure/azure_monitoring"
-  enabled        = var.azure_monitoring_enabled
   cluster_name   = var.cluster_name
   tags           = local.common_tags
   location       = var.azure_location
