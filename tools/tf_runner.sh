@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #Script for Legion clusters orchestration
 
+set -ex
 function ReadArguments() {
 
 	export VERBOSE=false
@@ -31,11 +32,6 @@ function ReadArguments() {
 			destroy)
 				shift
 				export COMMAND="destroy"
-				shift
-				;;
-			-v|--verbose)
-				export VERBOSE="true"
-				shift
 				;;
 			*)
 				echo "Unknown option: $1. Use -h for help."
@@ -50,8 +46,8 @@ function ReadArguments() {
 		exit 1
 	fi
 	# Read GCP credentials path from env
-	if [ ! $GCP_CREDENTIALS ]; then
-		echo "Error: No GCP credentials found. Pass path to the credentials json file as GCP_CREDENTIALS env var!"
+	if [ ! $GOOGLE_CREDENTIALS ]; then
+		echo "Error: No GCP credentials found. Pass path to the credentials json file as GOOGLE_CREDENTIALS env var!"
 		exit 1
 	fi
 	if [ ! $PROFILE ]; then
@@ -59,16 +55,12 @@ function ReadArguments() {
 		exit 1
 	fi
 	# Validate profile path
-	if [ ! -f $GCP_CREDENTIALS ]; then
-		echo "Error: no Cluster profile found at $GCP_CREDENTIALS path!"
+	if [ ! -f $GOOGLE_CREDENTIALS ]; then
+		echo "Error: no Cluster profile found at $GOOGLE_CREDENTIALS path!"
 	fi
 	# Validate Command parameter
 	if [[ ! " ${TF_SUPPORTED_COMMANDS[@]} " =~ " ${COMMAND} " ]]; then
 		echo "Error: incorrect Command parameter \"$COMMAND\", must be one of ${TF_SUPPORTED_COMMANDS}!"
-	fi
-	# Check verbose mode
-	if [ $VERBOSE == "true" ]; then
-		set -x
 	fi
 }
 
@@ -91,21 +83,21 @@ function TerraformRun() {
 
 	cd $WORK_DIR
 	export TF_DATA_DIR=/tmp/.terraform-$(GetParam 'cluster_name')-$TF_MODULE
-	terraform init -backend-config="bucket=$(GetParam 'tfstate_bucket')"
+	terraform init -no-color -backend-config="bucket=$(GetParam 'tfstate_bucket')"
 	
 	echo "Execute $TF_COMMAND on $TF_MODULE state"
 
 	if [ $TF_COMMAND = "apply" ]; then
-		terraform plan -var-file=$PROFILE
-		terraform $TF_COMMAND -auto-approve -var-file=$PROFILE
+		terraform plan -no-color -var-file=$PROFILE
+		terraform $TF_COMMAND -no-color -auto-approve -var-file=$PROFILE
 	else
-		terraform $TF_COMMAND -auto-approve -var-file=$PROFILE
+		terraform $TF_COMMAND -no-color -auto-approve -var-file=$PROFILE
 	fi
 }
 
 function SetupGCPAccess() {
 	echo "Activate service account"
-    gcloud auth activate-service-account --key-file=$GCP_CREDENTIALS --project=$(GetParam "project_id")
+    gcloud auth activate-service-account --key-file=$GOOGLE_CREDENTIALS --project=$(GetParam "project_id")
 }
 
 # Create Legion cluster
@@ -124,20 +116,33 @@ function TerraformCreate() {
 
 # Destroy Legion cluster
 function TerraformDestroy() {
-	echo 'INFO: Init HELM'
-	helm init --client-only
 
-	echo "INFO: Remove auto-generated fw rules"
-	gcloud compute firewall-rules list --filter='name:k8s- AND network:$(GetParam "cluster_name")-vpc' --format='value(name)' --project=$(GetParam "project_id")| while read i; do if (gcloud compute firewall-rules describe --project=$(GetParam "project_id")); then gcloud compute firewall-rules delete \$i --quiet; fi; done
+	if gcloud container clusters list --zone $(GetParam "location") | grep $(GetParam "cluster_name") ; then
 
-	echo 'INFO: Destroy Legion components'
-	TerraformRun legion destroy
-	echo 'INFO: Destroy K8S Legion dependencies'
-	TerraformRun k8s_setup destroy
-	echo 'INFO: Destroy Helm'
-	TerraformRun helm_init destroy
-	echo 'INFO: Destroy GKE cluster'
-	TerraformRun gke_create destroy
+		echo 'INFO: Authorize Kubernetes API access'
+		gcloud container clusters get-credentials $(GetParam "cluster_name") --zone $(GetParam "location") --project=$(GetParam "project_id")
+
+		echo 'INFO: Init HELM'
+		helm init --client-only
+
+		echo 'INFO: Destroy Legion components'
+		TerraformRun legion destroy
+		echo 'INFO: Destroy K8S Legion dependencies'
+		TerraformRun k8s_setup destroy
+		echo 'INFO: Destroy Helm'
+		TerraformRun helm_init destroy
+		echo "INFO: Remove auto-generated fw rules"
+		fw_filter="name:k8s- AND network:$(GetParam "cluster_name")-vpc"
+
+		for i in $(gcloud compute firewall-rules list --filter="${fw_filter}" --format='value(name)' --project=$(GetParam "project_id")); do
+			gcloud compute firewall-rules delete $i --quiet
+		done
+
+		echo 'INFO: Destroy GKE cluster'
+		TerraformRun gke_create destroy
+	else
+		echo "INFO: no $(GetParam "cluster_name") available"
+	fi
 }
 
 

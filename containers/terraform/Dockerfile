@@ -58,5 +58,3 @@ COPY terraform /opt/legion/terraform
 COPY version.info /opt/legion/version.info
 
 WORKDIR /opt/legion
-ENTRYPOINT ["tf_runner"]
-CMD ["-h"]
