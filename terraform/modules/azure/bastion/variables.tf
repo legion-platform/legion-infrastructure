@@ -35,7 +35,3 @@ variable "bastion_ssh_user" {
   default     = "ubuntu"
   description = "bastion hostname"
 }
-
-variable "bastion_ssh_public_key" {
-  description = "SSH public key, provided for bastion_ssh_user"
-}

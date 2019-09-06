@@ -1,16 +1,16 @@
 ########################################################
 # Bastion host
 ########################################################
-
-resource "azurerm_public_ip" "aks_bastion_publicip" {
-  name                = "${var.cluster_name}-bastion"
-  location            = var.location
-  resource_group_name = var.resource_group
-  allocation_method   = "Static"
-  tags                = var.bastion_tags
+resource "tls_private_key" "bastion_deploy" {
+  algorithm = "RSA"
+  rsa_bits  = "2048"
 }
 
-# We gonna create bastion host in AKS subnet
+locals {
+  deploy_pubkey = tls_private_key.bastion_deploy.public_key_openssh
+}
+
+# We going to create bastion host in AKS subnet
 resource "azurerm_network_interface" "aks_bastion_nic" {
   name                = "${var.bastion_hostname}-${var.cluster_name}-nic"
   location            = var.location
@@ -19,8 +19,7 @@ resource "azurerm_network_interface" "aks_bastion_nic" {
   ip_configuration {
     name                          = "bastion-public-ip"
     subnet_id                     = var.aks_subnet_id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.aks_bastion_publicip.id
+    private_ip_address_allocation = "Dynamic"    
   }
 }
 
@@ -57,7 +56,7 @@ resource "azurerm_virtual_machine" "aks_bastion" {
     disable_password_authentication = true
     ssh_keys {
       path     = "/home/${var.bastion_ssh_user}/.ssh/authorized_keys"
-      key_data = var.bastion_ssh_public_key
+      key_data = local.deploy_pubkey
     }
   }
   

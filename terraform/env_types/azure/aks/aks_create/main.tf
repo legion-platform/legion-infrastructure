@@ -39,6 +39,16 @@ module "aks_vpc" {
   subnet_cidr    = var.aks_cidr
 }
 
+module "aks_bastion_host" {
+  source           = "../../../../modules/azure/bastion"
+  cluster_name     = var.cluster_name
+  location         = var.azure_location
+  resource_group   = var.azure_resource_group
+  aks_subnet_id    = module.aks_vpc.subnet_id
+  bastion_ssh_user = "ubuntu"
+  bastion_tags     = local.common_tags
+}
+
 module "aks_cluster" {
   source                     = "../../../../modules/azure/aks_cluster"
   cluster_name               = var.cluster_name
