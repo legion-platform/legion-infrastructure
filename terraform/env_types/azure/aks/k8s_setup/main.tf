@@ -1,11 +1,5 @@
 data "azurerm_kubernetes_cluster" "aks" {
   name                = var.cluster_name
-}
-
-data "azurerm_public_ip" "ext_ip" {
-  name                = "${var.cluster_name}-extip"
-  resource_group_name = data.azurerm_kubernetes_cluster.aks.node_resource_group
-  depends_on          = [data.azurerm_kubernetes_cluster.aks]
   resource_group_name = var.azure_resource_group
 }
 
@@ -31,9 +25,9 @@ module "base_setup" {
 }
 
 module "nginx-ingress" {
-  source        = "../../../../modules/k8s/nginx-ingress"
-  lb_ip_address = data.azurerm_public_ip.ext_ip.ip_address
-  replicas      = data.azurerm_kubernetes_cluster.aks.agent_pool_profile.0.count
+  source      = "../../../../modules/k8s/nginx-ingress"
+  subnet_cidr = var.aks_cidr
+  replicas    = data.azurerm_kubernetes_cluster.aks.agent_pool_profile.0.count
 }
 
 # module "dashboard" {

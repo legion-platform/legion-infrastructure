@@ -71,6 +71,10 @@ variable "docker_repo" {
 #   description = "The VPC network to host the cluster in"
 # }
 
+variable "aks_cidr" {
+  description = "VPC subnet range"
+}
+
 ########################
 # Prometheus monitoring
 ########################
