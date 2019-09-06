@@ -79,15 +79,3 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   tags = var.aks_tags
 }
-
-########################################################
-# Assign public IP to AKS node resource group
-########################################################
-
-resource "azurerm_public_ip" "ext_ip" {
-  name                = "${var.cluster_name}-extip"
-  location            = var.location
-  resource_group_name = azurerm_kubernetes_cluster.aks.node_resource_group
-  allocation_method   = "Static"
-  tags                = var.aks_tags
-}

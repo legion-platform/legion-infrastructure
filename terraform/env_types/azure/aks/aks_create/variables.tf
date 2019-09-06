@@ -44,6 +44,10 @@ variable "cluster_name" {
   default     = "legion"
 }
 
+variable "public_ip_name" {
+  description = "Name of public IP-address used for AKS cluster"
+}
+
 variable "aks_common_tags" {
   description = "Set of common tags assigned to all cluster resources"
   type        = "map"
@@ -68,7 +72,7 @@ variable "k8s_version" {
 }
 
 variable "allowed_ips" {
-  description = "CIDR to allow access from"
+  description = "CIDRs to allow access from"
 }
 
 #variable "agent_cidr" {

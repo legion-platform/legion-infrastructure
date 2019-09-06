@@ -12,6 +12,13 @@ $ export RG="legion-test"
 $ az group create --name $RG --location eastus --tags environment=Testing cluster=legion
 ```
 
+- Create public IP that will be used as Kubernetes cluster endpoint
+```bash
+$ export CLUSTER_NAME="legion-test"
+$ az network public-ip create --name $CLUSTER_NAME --resource-group $RG --allocation-method Static \
+    --sku Standard --version IPv4 --tags environment=Testing cluster=$CLUSTER_NAME purpose="Kubernetes cluster endpoint"
+```
+
 - Create storage account in this storage group:
 ```bash
 $ export AZURE_STORAGE_ACCOUNT="storage7868768" # Some unique name without dashes, underscores and capitals

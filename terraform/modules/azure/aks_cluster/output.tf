@@ -5,11 +5,3 @@ output "k8s_api_address" {
 output "kube_config" {
   value = azurerm_kubernetes_cluster.aks.kube_config_raw
 }
-
-output "lb_ip_address" {
-  value = azurerm_public_ip.ext_ip.ip_address
-}
-
-output "lb_ip_address_id" {
-  value = azurerm_public_ip.ext_ip.id
-}
