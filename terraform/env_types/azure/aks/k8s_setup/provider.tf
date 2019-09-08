@@ -32,6 +32,10 @@ provider "kubernetes" {
   config_context_cluster   = local.config_context_cluster
 }
 
+provider "external" {
+  version = "~> 1.2"
+}
+
 provider "null" {
   version = "~> 2.1"
 }

@@ -23,6 +23,10 @@ variable "fw_subnet_cidr" {
   description = "Firewall subnet address range"
 }
 
+variable "ingress_ip" {
+  description = "IP of internal Kubernetes load balancer for ingress service"
+}
+
 variable "bastion_ip" {
   description = "Private IP of bastion host"
 }

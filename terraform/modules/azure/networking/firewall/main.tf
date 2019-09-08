@@ -4,9 +4,6 @@ data "http" "external_ip" {
 
 locals {
   allowed_subnets = concat(list("${chomp(data.http.external_ip.body)}/32"), var.allowed_ips)
-
-  # Here we just take last usable IP from AKS nodes CIDR and reserve it as internal ingress IP
-  internal_lb_ip = cidrhost(var.aks_subnet_cidr, 254)
 }
 
 data "azurerm_public_ip" "lb" {
@@ -51,7 +48,7 @@ resource "azurerm_firewall_nat_rule_collection" "ingress" {
     destination_ports = [ "80" ]
     destination_addresses = [ data.azurerm_public_ip.lb.ip_address ]
     protocols = [ "TCP" ]
-    translated_address = local.internal_lb_ip
+    translated_address = var.ingress_ip
     translated_port = "80"
   }
   rule {
@@ -60,7 +57,7 @@ resource "azurerm_firewall_nat_rule_collection" "ingress" {
     destination_ports = [ "443" ]
     destination_addresses = [ data.azurerm_public_ip.lb.ip_address ]
     protocols = [ "TCP" ]
-    translated_address = local.internal_lb_ip
+    translated_address = var.ingress_ip
     translated_port = "443"
   }
   rule {

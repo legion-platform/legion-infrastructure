@@ -19,6 +19,12 @@ data "azurerm_public_ip" "aks_ext" {
   resource_group_name = var.azure_resource_group
 }
 
+# First 3 IPs in subnet are reserved for Azure internal networking components.
+# Here we just take last usable IP from AKS nodes CIDR and reserve it as internal ingress IP.
+data "external" "last_ip" {
+  program = ["python3", "-c", "import ipaddress; print('{\"ip\": \"'+str(ipaddress.IPv4Network('${var.aks_cidr}')[-2])+'\"}')"]
+}
+
 module "azure_monitoring" {
   source   = "../../../../modules/azure/azure_monitoring"
   cluster_name   = var.cluster_name
@@ -57,6 +63,7 @@ module "aks_firewall" {
   aks_subnet_cidr = var.aks_cidr
   fw_subnet_cidr  = var.fw_cidr
   public_ip_name  = var.public_ip_name
+  ingress_ip      = data.external.last_ip.result.ip
   bastion_ip      = module.aks_bastion_host.private_ip
   allowed_ips     = var.allowed_ips
   tags            = local.common_tags
