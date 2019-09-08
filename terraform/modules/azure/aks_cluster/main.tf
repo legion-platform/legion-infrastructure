@@ -32,7 +32,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     enable_auto_scaling = true
     min_count           = var.aks_num_nodes_min
     max_count           = var.aks_num_nodes_max
-    #availability_zones  = ["1", "2"]
+    max_pods            = var.aks_num_pods
   }
 
   # agent_pool_profile {

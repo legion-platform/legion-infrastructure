@@ -69,6 +69,11 @@ variable "node_machine_type_highcpu" {
   description = "Machine type of cluster worker nodes (highcpu pool)"
 }
 
+variable "aks_num_pods" {
+  default     = "64"
+  description = "Maximum number of pods per AKS node"
+}
+
 variable "aks_num_nodes_min" {
   default     = "1"
   description = "Minimum number of nodes in first node pool"
