@@ -117,7 +117,8 @@ data "template_file" "legion_values" {
     model_output_bucket      = var.model_output_bucket
     model_output_region      = var.model_output_region
     model_output_secret      = var.model_output_secret
-    model_output_description = "Storage for trained artifacts"
+    model_output_secret_key  = var.model_output_secret_key
+    model_output_description = "Storage for trainined artifacts"
     model_output_web_ui_link = var.model_output_web_ui_link
 
     model_docker_user        = var.model_docker_user
