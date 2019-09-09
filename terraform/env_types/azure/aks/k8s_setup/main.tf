@@ -3,15 +3,14 @@ data "azurerm_kubernetes_cluster" "aks" {
   resource_group_name = var.azure_resource_group
 }
 
-# First 3 IPs in subnet are reserved for Azure internal networking components.
-# Here we just take last usable IP from AKS nodes CIDR and reserve it as internal ingress IP
-data "external" "last_ip" {
-  program = ["python3", "-c", "import ipaddress; print('{\"ip\": \"'+str(ipaddress.IPv4Network('${var.aks_cidr}')[-2])+'\"}')"]
-}
-
 locals {
   config_context_auth_info = data.azurerm_kubernetes_cluster.aks.kube_config.0.username
   config_context_cluster   = var.cluster_name
+}
+
+module "last_ip" {
+  source = "../../../../modules/azure/networking/get_last_subnet_ip"
+  cidr   = var.aks_cidr
 }
 
 module "get_tls" {
@@ -32,7 +31,7 @@ module "base_setup" {
 
 module "nginx-ingress" {
   source      = "../../../../modules/k8s/nginx-ingress"
-  ingress_ip  = data.external.last_ip.result.ip
+  ingress_ip  = module.last_ip.result
   replicas    = data.azurerm_kubernetes_cluster.aks.agent_pool_profile.0.count
 }
 
