@@ -26,15 +26,9 @@ connections:
   - id: legion-examples
     spec:
       type: "git"
-      uri: "git@github.com:legion-platform/legion-examples.git"
-      reference: "${model_reference}"
-      keySecret: "${jenkins_git_key}"
-  - id: legion
-    spec:
-      type: "git"
-      uri: "${model_examples_git_url}"
-      reference: "${model_reference}"
-      keySecret: "${jenkins_git_key}"
+      uri: "${git_examples_uri}"
+      reference: "${git_examples_reference}"
+      keySecret: "${git_examples_key}"
   - id: docker-ci
     spec:
       type: docker

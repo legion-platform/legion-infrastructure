@@ -193,9 +193,9 @@ data "template_file" "legion_values" {
     legion_data_bucket  = var.legion_data_bucket
     legion_collector_sa = google_service_account.collector_sa.email
 
-    model_examples_git_url = var.model_examples_git_url
-    model_reference        = var.model_reference
-    jenkins_git_key        = var.jenkins_git_key
+    git_examples_uri       = var.git_examples_uri
+    git_examples_reference = var.git_examples_reference
+    git_examples_key       = var.git_examples_key
 
     model_resources_cpu = var.model_resources_cpu
     model_resources_mem = var.model_resources_mem

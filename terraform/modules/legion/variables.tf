@@ -124,11 +124,11 @@ variable "model_docker_url" {
   description = "Model docker url"
 }
 
-variable "model_examples_git_url" {
+variable "git_examples_uri" {
   description = "Model examples git url"
 }
 
-variable "model_reference" {
+variable "git_examples_reference" {
   description = "Model reference"
 }
 
@@ -140,8 +140,8 @@ variable "model_resources_mem" {
   description = "Model pod mem limit"
 }
 
-variable "jenkins_git_key" {
-  description = "Jenkins git key for model repo"
+variable "git_examples_key" {
+  description = "Git ssh key for git connection"
 }
 
 variable "legion_data_bucket" {
