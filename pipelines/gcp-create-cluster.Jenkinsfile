@@ -14,7 +14,6 @@ pipeline {
         param_use_regression_tests = "${params.UseRegressionTests}"
         param_tests_tags = "${params.TestsTags}"
         param_cloud_provider = "${params.cloudProvider}"
-        param_commitID = "${params.commitID}"
         param_legion_cicd_repo = "${params.CicdRepoGitUrl}"
         param_legion_cicd_branch = "${params.CicdRepoGitBranch}"
         param_legion_profiles_repo = "${params.LegionProfilesRepo}"
@@ -60,16 +59,6 @@ pipeline {
                         fi
                         cd legion-cicd && git checkout ${env.param_legion_cicd_branch}
                         """
-                    }
-                    // Set legion release commit id
-                    commitID = (!env.commitID) ? 'null' : env.commitID.toString()
-                    commitID =  (commitID=='null' || commitID.length()<1) ? sh(script: "echo ${env.param_legion_version} | cut -f5 -d. | tr -d '\n'", returnStdout: true): commitID
-                    print("Legion commit ID: ${commitID}")
-
-                    if (!(commitID)) {
-                        print('Can\'t get commit id for legion package')
-                        currentBuild.result = 'FAILURE'
-                        return
                     }
                 }
             }

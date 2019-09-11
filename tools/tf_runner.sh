@@ -20,7 +20,7 @@ function ReadArguments() {
 				echo "Usage: ./tf_runner.sh [OPTIONS]"
 				echo " "
 				echo "options:"
-                echo "command[create|destroy]         command to execute: $TF_SUPPORTED_COMMANDS"
+                echo "command[create|destroy]         command to execute: ${TF_SUPPORTED_COMMANDS[@]}"
 				echo "-t  --verbose          		  verbose mode for debug purposes"
                 echo "-h  --help               		  show brief help"
 				exit 0
@@ -57,17 +57,19 @@ function ReadArguments() {
 	# Validate profile path
 	if [ ! -f $GOOGLE_CREDENTIALS ]; then
 		echo "Error: no Cluster profile found at $GOOGLE_CREDENTIALS path!"
+		exit 1
 	fi
 	# Validate Command parameter
 	if [[ ! " ${TF_SUPPORTED_COMMANDS[@]} " =~ " ${COMMAND} " ]]; then
-		echo "Error: incorrect Command parameter \"$COMMAND\", must be one of ${TF_SUPPORTED_COMMANDS}!"
+		echo "Error: incorrect Command parameter \"$COMMAND\", must be one of ${TF_SUPPORTED_COMMANDS[@]}!"
+		exit 1
 	fi
 }
 
 # Get parameter from cluster profile
 function GetParam() {
 	result=$(jq ".$1" $PROFILE | tr -d '"')
-	if [ ! result ]; then
+	if [ ! $result ]; then
 		echo "Error: $1 parameter missed in $PROFILE cluster profile"
 		exit 1
 	else
@@ -86,13 +88,7 @@ function TerraformRun() {
 	terraform init -no-color -backend-config="bucket=$(GetParam 'tfstate_bucket')"
 	
 	echo "Execute $TF_COMMAND on $TF_MODULE state"
-
-	if [ $TF_COMMAND = "apply" ]; then
-		terraform plan -no-color -var-file=$PROFILE
-		terraform $TF_COMMAND -no-color -auto-approve -var-file=$PROFILE
-	else
-		terraform $TF_COMMAND -no-color -auto-approve -var-file=$PROFILE
-	fi
+	terraform $TF_COMMAND -no-color -auto-approve -var-file=$PROFILE
 }
 
 function SetupGCPAccess() {
@@ -159,4 +155,5 @@ elif [ $COMMAND == 'destroy' ]; then
 	TerraformDestroy
 else
 	echo "Error: invalid command!"
+	exit 1
 fi

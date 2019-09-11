@@ -175,6 +175,7 @@ pipeline {
                     result = build job: env.param_terminate_cluster_job_name, propagate: true, wait: true, parameters: [
                            [$class: 'GitParameterValue', name: 'GitBranch', value: env.param_legion_infra_branch],
                            string(name: 'LegionInfraVersion', value: legionInfraVersion),
+                           string(name: 'LegionVersion', value: legionVersion),
                            string(name: 'ClusterName', value: env.param_cluster_name),
                            string(name: 'LegionProfilesBranch', value: env.param_legion_profiles_branch),
                            string(name: 'CicdRepoGitBranch', value: env.param_legion_cicd_branch)
