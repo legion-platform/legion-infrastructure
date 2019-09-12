@@ -19,7 +19,8 @@ resource "azurerm_network_interface" "aks_bastion_nic" {
   ip_configuration {
     name                          = "bastion-public-ip"
     subnet_id                     = var.aks_subnet_id
-    private_ip_address_allocation = "Dynamic"    
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = var.public_ip_id
   }
 }
 
