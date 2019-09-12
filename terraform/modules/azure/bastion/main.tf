@@ -1,6 +1,9 @@
 ########################################################
 # Bastion host
 ########################################################
+
+# We could't provide multiple SSH public keys during VM host creation.
+# So, we'll generate key for deployment and add one more key later.
 resource "tls_private_key" "bastion_deploy" {
   algorithm = "RSA"
   rsa_bits  = "2048"

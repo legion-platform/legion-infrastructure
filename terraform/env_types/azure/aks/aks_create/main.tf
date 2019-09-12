@@ -38,7 +38,7 @@ module "aks_networking" {
   allowed_ips    = var.allowed_ips
 }
 
-module "aks_bastion_host" {
+module "aks_bastion" {
   source           = "../../../../modules/azure/bastion"
   cluster_name     = var.cluster_name
   location         = var.azure_location
@@ -93,5 +93,5 @@ resource "null_resource" "bastion_kubeconfig" {
       "mkdir -p ~/.kube && printf \"${module.aks_cluster.kube_config}\" > ~/.kube/config"
     ]
   }
-  depends_on = [ module.aks_bastion_host, module.aks_firewall, module.aks_cluster ]
+  depends_on = [ module.aks_bastion, module.aks_cluster ]
 }
