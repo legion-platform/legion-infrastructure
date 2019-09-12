@@ -26,7 +26,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     os_type             = "Linux"
     os_disk_size_gb     = var.node_disk_size_gb
     vnet_subnet_id      = var.aks_subnet_id
-    count               = var.aks_num_nodes_min
+    count               = var.aks_num_nodes_init
 
     type                = "VirtualMachineScaleSets"
     enable_auto_scaling = true
@@ -52,6 +52,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
   #   ]
   # }
 
+  # We have to provide Service Principal account credentials in order to create node resource group
+  # and appropriate dynamic resources, related to AKS (node resource groups, network security groups,
+  # virtual machine scale sets, loadbalancers)
   service_principal {
     client_id     = var.sp_id
     client_secret = var.sp_secret
@@ -71,6 +74,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
   network_profile {
     network_plugin = "azure"
     network_policy = "calico"
+    #pod_cidr: ""
+    #service_cidr: "10.0.0.0/16"
+    #dns_service_ip: "10.0.0.10"
+    #docker_bridge_cidr: "172.17.0.1/16"
+    #load_balancer_sku: "basic"
   }
 
   tags = var.aks_tags

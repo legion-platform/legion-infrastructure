@@ -74,6 +74,11 @@ variable "aks_num_pods" {
   description = "Maximum number of pods per AKS node"
 }
 
+variable "aks_num_nodes_init" {
+  default     = "1"
+  description = "Initial number of nodes in first node pool"
+}
+
 variable "aks_num_nodes_min" {
   default     = "1"
   description = "Minimum number of nodes in first node pool"

@@ -110,13 +110,19 @@ variable "node_machine_type" {
   description = "Machine type of aks nodes"
 }
 
+variable "aks_num_nodes_init" {
+  default = "1"
+  description = "Initial number of worket nodes in default node pool"
+}
+
 variable "aks_num_nodes_min" {
   default = "1"
-  description = "Number of nodes in each aks cluster zone"
+  description = "Minimum number of worket nodes in default node pool"
 }
+
 variable "aks_num_nodes_max" {
-  default = "5"
-  description = "Number of nodes in each aks cluster zone"
+  default = "2"
+  description = "Maximum number of worket nodes in default node pool"
 }
 
 ################

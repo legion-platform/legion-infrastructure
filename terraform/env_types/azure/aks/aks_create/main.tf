@@ -20,7 +20,7 @@ data "azurerm_public_ip" "aks_ext" {
 }
 
 module "azure_monitoring" {
-  source   = "../../../../modules/azure/azure_monitoring"
+  source   = "../../../../modules/azure/monitoring"
   cluster_name   = var.cluster_name
   tags           = local.common_tags
   location       = var.azure_location
@@ -64,6 +64,7 @@ module "aks_cluster" {
   ssh_public_key             = data.aws_s3_bucket_object.ssh_public_key.body
   node_machine_type          = var.node_machine_type
   node_disk_size_gb          = var.node_disk_size_gb
+  aks_num_nodes_init         = var.aks_num_nodes_init
   aks_num_nodes_min          = var.aks_num_nodes_min
   aks_num_nodes_max          = var.aks_num_nodes_max
   aks_analytics_workspace_id = module.azure_monitoring.workspace_id
