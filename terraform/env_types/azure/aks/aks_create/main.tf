@@ -27,14 +27,15 @@ module "azure_monitoring" {
   resource_group = var.azure_resource_group
 }
 
-module "aks_vpc" {
-  source         = "../../../../modules/azure/networking/vpc"
+module "aks_networking" {
+  source         = "../../../../modules/azure/networking"
   cluster_name   = var.cluster_name
   tags           = local.common_tags
   location       = var.azure_location
   resource_group = var.azure_resource_group
   subnet_cidr    = var.aks_cidr
-  fw_subnet_cidr = var.fw_cidr
+  public_ip_name = var.public_ip_name
+  allowed_ips    = var.allowed_ips
 }
 
 module "aks_bastion_host" {
@@ -42,7 +43,8 @@ module "aks_bastion_host" {
   cluster_name     = var.cluster_name
   location         = var.azure_location
   resource_group   = var.azure_resource_group
-  aks_subnet_id    = module.aks_vpc.subnet_id
+  aks_subnet_id    = module.aks_networking.subnet_id
+  public_ip_id     = module.aks_networking.bastion_ip_id
   bastion_ssh_user = "ubuntu"
   bastion_tags     = local.common_tags
 }
@@ -54,7 +56,7 @@ module "aks_cluster" {
   location                   = var.azure_location
   resource_group             = var.azure_resource_group
   aks_dns_prefix             = var.aks_dns_prefix
-  aks_subnet_id              = module.aks_vpc.subnet_id
+  aks_subnet_id              = module.aks_networking.subnet_id
   sp_id                      = var.azure_client_id
   sp_secret                  = var.azure_client_secret
   k8s_version                = var.k8s_version
@@ -74,12 +76,12 @@ resource "local_file" "kubeconfig" {
 
 resource "null_resource" "bastion_kubeconfig" {
   connection {
-    host = data.azurerm_public_ip.aks_ext.ip_address
-    user = "ubuntu"
-    type = "ssh"
-    private_key = module.aks_bastion_host.deploy_privkey
-    timeout = "1m"
-    agent = false
+    host        = module.aks_networking.bastion_ip
+    user        = "ubuntu"
+    type        = "ssh"
+    private_key = module.aks_bastion.deploy_privkey
+    timeout     = "1m"
+    agent       = false
   }
 
   provisioner "remote-exec" {

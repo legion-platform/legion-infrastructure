@@ -15,8 +15,12 @@ variable "subnet_cidr" {
   description = "AKS worker nodes subnet range"
 }
 
-variable "fw_subnet_cidr" {
-  description = "Firewall subnet address range"
+variable "public_ip_name" {
+  description = "Name of public IP-address used for AKS cluster"
+}
+
+variable "allowed_ips" {
+  description = "CIDRs list to allow access from"
 }
 
 variable "tags" {

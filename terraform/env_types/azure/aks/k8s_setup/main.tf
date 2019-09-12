@@ -3,6 +3,11 @@ data "azurerm_kubernetes_cluster" "aks" {
   resource_group_name = var.azure_resource_group
 }
 
+data "azurerm_public_ip" "aks_ext" {
+  name                = var.public_ip_name
+  resource_group_name = var.azure_resource_group
+}
+
 locals {
   config_context_auth_info = data.azurerm_kubernetes_cluster.aks.kube_config.0.username
   config_context_cluster   = var.cluster_name
@@ -11,7 +16,7 @@ locals {
 module "get_tls" {
   source = "../../../../modules/tls"
   secrets_storage = var.secrets_storage
-  cluster_name    = var.cluster_name
+  cluster_name    = var.cluster_name  
 }
 
 ########################################################
@@ -25,9 +30,10 @@ module "base_setup" {
 }
 
 module "nginx-ingress" {
-  source      = "../../../../modules/k8s/nginx-ingress"
-  ingress_ip  = module.last_ip.result
-  replicas    = data.azurerm_kubernetes_cluster.aks.agent_pool_profile.0.count
+  source            = "../../../../modules/k8s/nginx-ingress"
+  ingress_ip        = data.azurerm_public_ip.aks_ext.ip_address
+  ip_resource_group = var.azure_resource_group
+  replicas          = data.azurerm_kubernetes_cluster.aks.agent_pool_profile.0.min_count
 }
 
 # module "dashboard" {

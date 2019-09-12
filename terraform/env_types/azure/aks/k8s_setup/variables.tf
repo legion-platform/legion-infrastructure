@@ -44,6 +44,10 @@ variable "cluster_name" {
   description = "Legion cluster name"
 }
 
+variable "public_ip_name" {
+  description = "Name of public IP-address used for AKS cluster"
+}
+
 variable "tiller_image" {
   default = "gcr.io/kubernetes-helm/tiller:v2.14.0"
 }
