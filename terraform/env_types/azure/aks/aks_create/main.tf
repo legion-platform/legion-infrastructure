@@ -19,11 +19,6 @@ data "azurerm_public_ip" "aks_ext" {
   resource_group_name = var.azure_resource_group
 }
 
-module "last_ip" {
-  source = "../../../../modules/azure/networking/get_last_subnet_ip"
-  cidr   = var.aks_cidr
-}
-
 module "azure_monitoring" {
   source   = "../../../../modules/azure/azure_monitoring"
   cluster_name   = var.cluster_name
@@ -50,22 +45,6 @@ module "aks_bastion_host" {
   aks_subnet_id    = module.aks_vpc.subnet_id
   bastion_ssh_user = "ubuntu"
   bastion_tags     = local.common_tags
-}
-
-module "aks_firewall" {
-  source          = "../../../../modules/azure/networking/firewall"
-  cluster_name    = var.cluster_name
-  location        = var.azure_location
-  resource_group  = var.azure_resource_group
-  vpc_name        = module.aks_vpc.name
-  aks_subnet_name = module.aks_vpc.subnet_name
-  aks_subnet_cidr = var.aks_cidr
-  fw_subnet_cidr  = var.fw_cidr
-  public_ip_name  = var.public_ip_name
-  ingress_ip      = module.last_ip.result
-  bastion_ip      = module.aks_bastion_host.private_ip
-  allowed_ips     = var.allowed_ips
-  tags            = local.common_tags
 }
 
 module "aks_cluster" {

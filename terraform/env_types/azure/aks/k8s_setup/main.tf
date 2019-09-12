@@ -8,11 +8,6 @@ locals {
   config_context_cluster   = var.cluster_name
 }
 
-module "last_ip" {
-  source = "../../../../modules/azure/networking/get_last_subnet_ip"
-  cidr   = var.aks_cidr
-}
-
 module "get_tls" {
   source = "../../../../modules/tls"
   secrets_storage = var.secrets_storage
