@@ -27,7 +27,7 @@ $ az group create --name $RG --location eastus --tags environment=Testing cluste
 ```bash
 $ export CLUSTER_NAME="legion-test"
 $ az network public-ip create --name $CLUSTER_NAME --resource-group $RG --allocation-method Static \
-    --sku Standard --version IPv4 --tags environment=Testing cluster=$CLUSTER_NAME purpose="Kubernetes cluster endpoint"
+    --sku Basic --version IPv4 --tags environment=Testing cluster=$CLUSTER_NAME purpose="Kubernetes cluster endpoint"
 ```
 
 - Create storage account in this storage group:
