@@ -109,7 +109,7 @@ variable "bastion_tags" {
 }
 
 variable "bastion_hostname" {
-  default = "bastion"
+  default     = "bastion"
   description = "bastion hostname"
 }
 

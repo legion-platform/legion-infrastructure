@@ -7,7 +7,7 @@ data "http" "external_ip" {
   url = "http://ifconfig.co"
 }
 
-# TODO: make check for CIDR interconnections
+# TODO: make check for CIDR block interceptions
 locals {
   allowed_subnets = concat(list("${chomp(data.http.external_ip.body)}/32"), var.allowed_ips)
 }
