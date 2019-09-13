@@ -54,42 +54,7 @@ variable "sp_secret" {
   description = "Service Principal account secret"
 }
 
-variable "node_machine_type" {
-  default     = "Standard_B2s"
-  description = "Machine type of cluster worker nodes (basic pool)"
-}
-
-variable "node_disk_size_gb" {
-  default     = "20"
-  description = "Persistent disk size for cluster worker nodes"
-}
-
-variable "node_machine_type_highcpu" {
-  default     = "Standard_B4ms"
-  description = "Machine type of cluster worker nodes (highcpu pool)"
-}
-
-variable "aks_num_pods" {
-  default     = "64"
-  description = "Maximum number of pods per AKS node"
-}
-
-variable "aks_num_nodes_init" {
-  default     = "1"
-  description = "Initial number of nodes in first node pool"
-}
-
-variable "aks_num_nodes_min" {
-  default     = "1"
-  description = "Minimum number of nodes in first node pool"
-}
-
-variable "aks_num_nodes_max" {
-  default     = "3"
-  description = "Maximum number of nodes in first node pool"
-}
-
-variable "aks_highcpu_num_nodes_max" {
-  default     = "2"
-  description = "Maximum number of nodes in High CPU node pool"
+variable "node_pools" {
+  description = "List of k8s node pools map definitions"
+  default     = []
 }

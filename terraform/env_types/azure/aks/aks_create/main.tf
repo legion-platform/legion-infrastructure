@@ -1,7 +1,8 @@
 locals {
   common_tags = merge(
     { "cluster" = var.cluster_name },
-    var.aks_common_tags)
+    var.aks_common_tags
+  )
 }
 
 ########################################################
@@ -62,11 +63,7 @@ module "aks_cluster" {
   k8s_version                = var.k8s_version
   ssh_user                   = "ubuntu"
   ssh_public_key             = data.aws_s3_bucket_object.ssh_public_key.body
-  node_machine_type          = var.node_machine_type
-  node_disk_size_gb          = var.node_disk_size_gb
-  aks_num_nodes_init         = var.aks_num_nodes_init
-  aks_num_nodes_min          = var.aks_num_nodes_min
-  aks_num_nodes_max          = var.aks_num_nodes_max
+  node_pools                 = var.node_pools
   aks_analytics_workspace_id = module.azure_monitoring.workspace_id
 }
 

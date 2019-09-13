@@ -100,31 +100,6 @@ variable "allowed_ips" {
 #  description = "Cluster root DNS zone name"
 #}
 
-#############
-# Node pool
-#############
-variable "node_disk_size_gb" {
-  description = "Persistent disk size for cluster worker nodes"
-}
-variable "node_machine_type" {
-  description = "Machine type of aks nodes"
-}
-
-variable "aks_num_nodes_init" {
-  default = "1"
-  description = "Initial number of worket nodes in default node pool"
-}
-
-variable "aks_num_nodes_min" {
-  default = "1"
-  description = "Minimum number of worket nodes in default node pool"
-}
-
-variable "aks_num_nodes_max" {
-  default = "2"
-  description = "Maximum number of worket nodes in default node pool"
-}
-
 ################
 # Bastion host
 ################
@@ -141,4 +116,23 @@ variable "bastion_tags" {
 variable "bastion_hostname" {
   default = "bastion"
   description = "bastion hostname"
+}
+
+################
+# k8s node pools
+################
+variable "node_pools" {
+  default = [
+    {
+      name               = "main"
+      initial_node_count = "3"
+      max_pods           = "64"
+      autoscaling = {
+        min_node_count = "1"
+        max_node_count = "5"
+      }
+      node_config = {}
+    },
+
+  ]
 }

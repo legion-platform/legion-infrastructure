@@ -20,37 +20,29 @@ resource "azurerm_kubernetes_cluster" "aks" {
     }
   }
 
-  agent_pool_profile {
-    name                = "basic"
-    vm_size             = var.node_machine_type
-    os_type             = "Linux"
-    os_disk_size_gb     = var.node_disk_size_gb
-    vnet_subnet_id      = var.aks_subnet_id
-    count               = var.aks_num_nodes_init
+  dynamic "agent_pool_profile" {
+    for_each = var.node_pools
+    content {
+      type                = "VirtualMachineScaleSets"
+      enable_auto_scaling = true
 
-    type                = "VirtualMachineScaleSets"
-    enable_auto_scaling = true
-    min_count           = var.aks_num_nodes_min
-    max_count           = var.aks_num_nodes_max
-    max_pods            = var.aks_num_pods
+      name            = lookup(agent_pool_profile.value, "name", "base")
+      vm_size         = lookup(agent_pool_profile.value.node_config, "machine_type", "Standard_B2s")
+      os_type         = "Linux"
+      os_disk_size_gb = lookup(agent_pool_profile.value.node_config, "disk_size_gb", "30")
+      vnet_subnet_id  = var.aks_subnet_id
+
+      count     = lookup(agent_pool_profile.value, "initial_node_count", "1")
+      min_count = lookup(lookup(agent_pool_profile.value, "autoscaling", {}), "min_node_count", "1")
+      max_count = lookup(lookup(agent_pool_profile.value, "autoscaling", {}), "max_node_count", "2")
+      max_pods  = lookup(agent_pool_profile.value, "max_pods", "32")
+
+      node_taints = [
+        for taint in lookup(agent_pool_profile.value.node_config, "taint", []):
+          "${taint.key}=${taint.value}:${taint.effect}"
+      ]
+    }
   }
-
-  # agent_pool_profile {
-  #   name                = "highcpu"
-  #   vm_size             = var.node_machine_type_highcpu
-  #   os_type             = "Linux"
-  #   os_disk_size_gb     = var.node_disk_size_gb
-  #   vnet_subnet_id      = var.aks_subnet_id
-
-  #   type                = "VirtualMachineScaleSets"
-  #   enable_auto_scaling = "true"
-  #   min_count           = "1"
-  #   max_count           = var.aks_highcpu_num_nodes_max
-
-  #   node_taints = [
-  #     "dedicated=jenkins-slave:NoSchedule"
-  #   ]
-  # }
 
   # We have to provide Service Principal account credentials in order to create node resource group
   # and appropriate dynamic resources, related to AKS (node resource groups, network security groups,
