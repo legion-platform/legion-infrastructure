@@ -79,11 +79,6 @@ variable "aks_cidr" {
   default     = "10.255.255.0/24"
 }
 
-variable "fw_cidr" {
-  description = "Firewall-related subnet CIDR, it must be at least /26 for deploying an AzureFirewall"
-  default     = "192.168.168.0/26"
-}
-
 variable "k8s_version" {
   description = "Kubernetes master version"
   default     = "1.13.10"
