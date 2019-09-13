@@ -1,3 +1,7 @@
+resource "random_id" "pool_name" {
+  byte_length = 8
+}
+
 ########################################################
 # Deploy AKS cluster
 ########################################################
@@ -27,7 +31,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
       type                = "VirtualMachineScaleSets"
       enable_auto_scaling = true
 
-      name            = lookup(agent_pool_profile.value, "name", "base")
+      name            = lookup(agent_pool_profile.value, "name", random_id.pool_name.dec)
       vm_size         = lookup(agent_pool_profile.value.node_config, "machine_type", "Standard_B2s")
       os_type         = "Linux"
       os_disk_size_gb = lookup(agent_pool_profile.value.node_config, "disk_size_gb", "30")
