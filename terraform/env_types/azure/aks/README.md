@@ -11,6 +11,11 @@ $ export TF_VAR_sp_client_id=${ARM_CLIENT_ID}
 $ export TF_VAR_sp_secret=${ARM_CLIENT_SECRET}
 ```
 
+- Login as service principal using [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli):
+```bash
+$ az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+```
+
 - Turn on all necessary Azure Preview functions:
 ```bash
 $ az extension add --name aks-preview
