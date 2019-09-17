@@ -1,7 +1,6 @@
 # Prerequisities
 
-- Create Azure Service Principal account.
-- In Azure cloud console, login as service principal:
+- [Create Azure Service Principal](https://www.terraform.io/docs/providers/azurerm/auth/service_principal_client_secret.html#creating-a-service-principal) account and declare environment variables, necessary for Terraform provider.
 ```bash
 $ export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
 $ export ARM_CLIENT_SECRET="00000000-0000-0000-0000-000000000000"
@@ -29,13 +28,13 @@ $ az provider register -n Microsoft.ContainerService
 
 - Create resource group for Terraform remote backend and all base resources of AKS cluster:
 ```bash
-$ export RG="legion-test"
+$ export CLUSTER_NAME="legion-test"
+$ export RG=${CLUSTER_NAME}
 $ az group create --name $RG --location eastus --tags environment=Testing cluster=legion
 ```
 
 - Create public IP that will be used as Kubernetes cluster endpoint
 ```bash
-$ export CLUSTER_NAME="legion-test"
 $ az network public-ip create --name $CLUSTER_NAME --resource-group $RG --allocation-method Static \
     --sku Basic --version IPv4 --tags environment=Testing cluster=$CLUSTER_NAME purpose="Kubernetes cluster endpoint"
 ```
