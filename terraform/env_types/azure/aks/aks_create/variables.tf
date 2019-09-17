@@ -113,14 +113,46 @@ variable "node_pools" {
   default = [
     {
       name               = "main"
-      initial_node_count = "3"
+      initial_node_count = "4"
       max_pods           = "64"
       autoscaling = {
-        min_node_count = "1"
-        max_node_count = "5"
+        min_node_count   = "1"
+        max_node_count   = "5"
       }
-      node_config = {}
+      node_config = {
+        machine_type     = "Standard_B2s"
+      }
     },
-
+    # {
+    #   name               = "training"
+    #   max_pods           = "128"
+    #   autoscaling = {
+    #     min_node_count   = "1"
+    #     max_node_count   = "2"
+    #   }
+    #   node_config = {
+    #     machine_type     = "Standard_B8ms"
+    #     disk_size_gb     = "100"
+    #     labels = {
+    #       mode           = "legion-training"
+    #     }
+    #     taint = [{
+    #       key    = "dedicated"
+    #       value  = "training"
+    #       effect = "NoSchedule"
+    #     }]
+    #   }
+    # },
+    # {
+    #   name     = "training_gpu"
+    #   max_pods = "128"
+    #   node_config = {
+    #   machine_type = "Standard_NC6_Promo" # East US, South Central US, North Central US, North Europe, UK South
+    #   disk_size_gb = "100"
+    #   labels = {
+    #     "mode" = "legion-training-gpu"
+    #   }
+    # }
+    # }
   ]
 }
