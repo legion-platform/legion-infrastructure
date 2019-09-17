@@ -53,7 +53,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   # and appropriate dynamic resources, related to AKS (node resource groups, network security groups,
   # virtual machine scale sets, loadbalancers)
   service_principal {
-    client_id     = var.sp_id
+    client_id     = var.sp_client_id
     client_secret = var.sp_secret
   }
 

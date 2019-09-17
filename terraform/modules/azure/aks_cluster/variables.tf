@@ -46,7 +46,7 @@ variable "aks_analytics_workspace_id" {
   default     = "my-test-default-variable-eica0Chi"
 }
 
-variable "sp_id" {
+variable "sp_client_id" {
   description = "Service Principal account ID"
 }
 

@@ -1,21 +1,5 @@
 ############################################################################################################
 
-variable "azure_tenant_id" {
-  description = "Azure Tenant ID"
-}
-
-variable "azure_subscription_id" {
-  description = "Azure Subscription ID tied to the tenant"
-}
-
-variable "azure_client_id" {
-  description = "Azure Service Principal account ID"
-}
-
-variable "azure_client_secret" {
-  description = "Azure Service Principal account secret"
-}
-
 variable "azure_location" {
   description = "Azure location in which the resource group will be created"
   default     = "eastus"
@@ -94,6 +78,15 @@ variable "allowed_ips" {
 #variable "dns_zone_name" {
 #  description = "Cluster root DNS zone name"
 #}
+# Next two variables are ID and secret of Service Principal account.
+# These should be defined as TF_VAR_sp_ckuent_id and TF_VAR_sp_secret environment variables
+variable "sp_client_id" {
+  description = "Service Principal account ID"
+}
+
+variable "sp_secret" {
+  description = "Service Principal account secret"
+}
 
 ################
 # Bastion host
