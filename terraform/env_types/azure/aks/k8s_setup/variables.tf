@@ -5,18 +5,6 @@ variable "azure_resource_group" {
   default     = "legion-rg"
 }
 
-variable "aws_profile" {
-  description = "AWS profile name"
-}
-
-variable "aws_credentials_file" {
-  description = "AWS credentials file location"
-}
-
-variable "aws_region" {
-  description = "Region of AWS resources"
-}
-
 variable "secrets_storage" {
   description = "Name of S3 bucket with TLS artifacts"
 }
