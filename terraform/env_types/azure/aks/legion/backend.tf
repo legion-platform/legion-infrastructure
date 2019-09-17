@@ -1,5 +1,3 @@
 terraform {
-  backend "azurerm" {
-    key="legion/default.tfstate"
-  }
+  backend "azurerm" {}
 }
