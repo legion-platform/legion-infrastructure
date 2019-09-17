@@ -3,7 +3,7 @@ provider "azurerm" {
 }
 
 provider "helm" {
-  version         = "=0.10.2"
+  version         = "= 0.10.2"
   install_tiller  = true
   namespace       = "kube-system"
   service_account = "tiller"
@@ -16,11 +16,11 @@ provider "helm" {
 }
 
 provider "kubernetes" {
-  version                  = "~> 1.9"
+  version                  = "= 1.9.0"
   config_context_auth_info = local.config_context_auth_info
   config_context_cluster   = local.config_context_cluster
 }
 
 provider "null" {
-  version = "~> 2.1"
+  version = "= 2.1.2"
 }
