@@ -40,10 +40,6 @@ variable "cluster_name" {
   default     = "legion"
 }
 
-variable "public_ip_name" {
-  description = "Name of public IP-address used for AKS cluster"
-}
-
 variable "aks_common_tags" {
   description = "Set of common tags assigned to all cluster resources"
   type        = "map"
@@ -51,6 +47,10 @@ variable "aks_common_tags" {
     environment = "Development"
     purpose     = "Kubernetes Cluster"
   }
+}
+
+variable "aks_public_ip_name" {
+  description = "Name of public IP-address used for AKS cluster"
 }
 
 variable "aks_dns_prefix" {

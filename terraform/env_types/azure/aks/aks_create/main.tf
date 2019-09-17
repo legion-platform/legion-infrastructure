@@ -16,7 +16,7 @@ data "aws_s3_bucket_object" "ssh_public_key" {
 }
 
 data "azurerm_public_ip" "aks_ext" {
-  name                = var.public_ip_name
+  name                = var.aks_public_ip_name
   resource_group_name = var.azure_resource_group
 }
 
@@ -35,7 +35,7 @@ module "aks_networking" {
   location       = var.azure_location
   resource_group = var.azure_resource_group
   subnet_cidr    = var.aks_cidr
-  public_ip_name = var.public_ip_name
+  public_ip_name = var.aks_public_ip_name
   allowed_ips    = var.allowed_ips
 }
 

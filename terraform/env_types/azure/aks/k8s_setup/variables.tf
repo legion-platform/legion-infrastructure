@@ -28,7 +28,7 @@ variable "cluster_name" {
   description = "Legion cluster name"
 }
 
-variable "public_ip_name" {
+variable "aks_public_ip_name" {
   description = "Name of public IP-address used for AKS cluster"
 }
 

@@ -4,7 +4,7 @@ data "azurerm_kubernetes_cluster" "aks" {
 }
 
 data "azurerm_public_ip" "aks_ext" {
-  name                = var.public_ip_name
+  name                = var.aks_public_ip_name
   resource_group_name = var.azure_resource_group
 }
 
@@ -16,7 +16,7 @@ locals {
 module "get_tls" {
   source = "../../../../modules/tls"
   secrets_storage = var.secrets_storage
-  cluster_name    = var.cluster_name  
+  cluster_name    = var.cluster_name
 }
 
 ########################################################
