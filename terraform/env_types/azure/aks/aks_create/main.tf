@@ -68,11 +68,6 @@ module "aks_cluster" {
   aks_analytics_workspace_id = module.azure_monitoring.workspace_id
 }
 
-resource "local_file" "kubeconfig" {
-  sensitive_content = module.aks_cluster.kube_config
-  filename          = "/root/.kube/config"
-}
-
 resource "null_resource" "bastion_kubeconfig" {
   connection {
     host        = module.aks_networking.bastion_ip
