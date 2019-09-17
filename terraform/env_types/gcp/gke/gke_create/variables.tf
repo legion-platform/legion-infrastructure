@@ -35,7 +35,7 @@ variable "region_aws" {
 }
 
 variable "infra_vpc_name" {
-  default = "infra-vpc"
+  default     = "infra-vpc"
   description = "Region of resources"
 }
 
@@ -64,6 +64,10 @@ variable "pods_cidr" {
   description = "GKE pods CIDR"
 }
 
+variable "service_cidr" {
+  description = "GKE service CIDR"
+}
+
 variable "aws_sg" {
   description = "AWS SG id for gcp access"
 }
@@ -86,6 +90,16 @@ variable "gke_node_tag" {
 variable "location" {
   default     = "us-east1-b"
   description = "The location (region or zone) in which the cluster master will be created"
+}
+
+variable "node_locations" {
+  default     = []
+  description = "The list of zones in which nodes will be created, leave blank for zone cluster"
+}
+
+variable "initial_node_count" {
+  default     = "1"
+  description = "Initial node count"
 }
 
 variable "k8s_version" {
@@ -115,26 +129,6 @@ variable "dns_zone_name" {
 #############
 # Node pool
 #############
-variable "node_disk_size_gb" {
-  default     = "20"
-  description = "Persistent disk size for cluster worker nodes"
-}
-
-variable "gke_node_machine_type" {
-  default     = "n1-standard-2"
-  description = "Machine type of GKE nodes"
-}
-
-variable "gke_num_nodes_min" {
-  default     = "1"
-  description = "Number of nodes in each GKE cluster zone"
-}
-
-variable "gke_num_nodes_max" {
-  default     = "5"
-  description = "Number of nodes in each GKE cluster zone"
-}
-
 variable "nodes_sa" {
   default     = "default"
   description = "Service account for cluster nodes"

@@ -45,6 +45,16 @@ variable "location" {
   description = "The location (region or zone) in which the cluster master will be created"
 }
 
+variable "initial_node_count" {
+  type        = string
+  description = "Initial node count, use it to warm up master"
+}
+
+variable "node_locations" {
+  type        = list(string)
+  description = "The list of zones in which nodes will be created"
+}
+
 variable "network" {
   description = "The VPC network to host the cluster in"
 }
@@ -110,59 +120,13 @@ variable "pods_cidr" {
   description = "GKE pods CIDR"
 }
 
+variable "service_cidr" {
+  description = "GKE service CIDR"
+}
+
 #############
 # Node pool
 #############
-
-variable "node_disk_size_gb" {
-  default     = "20"
-  description = "Persistent disk size for cluster worker nodes"
-}
-
-variable "gke_node_machine_type" {
-  default     = "n1-standard-2"
-  description = "Machine type of GKE nodes"
-}
-
-variable "gke_node_machine_type_highcpu" {
-  default     = "n1-highcpu-8"
-  description = "Machine type of GKE nodes for high cpu pods"
-}
-
-variable "gke_node_machine_type_gpu" {
-  default     = "n1-standard-2"
-  description = "Machine type of GKE nodes for gpu pods"
-}
-
-variable "gke_gpu_accelerator" {
-  default     = "nvidia-tesla-p100"
-  description = "GPU accelerator for GPU node pool VMs"
-}
-
-variable "gpu_accelerators_count" {
-  default     = "2"
-  description = "Number of GPU accelerators attached to node"
-}
-
-variable "gke_num_nodes_min" {
-  default     = "1"
-  description = "Number of nodes in each GKE cluster zone"
-}
-
-variable "gke_num_nodes_max" {
-  default     = "5"
-  description = "Number of nodes in each GKE cluster zone"
-}
-
-variable "gke_highcpu_num_nodes_max" {
-  default     = "2"
-  description = "Number of nodes in High CPU node pool"
-}
-
-variable "gke_gpu_num_nodes_max" {
-  default     = "2"
-  description = "Number of nodes in GPU node pool"
-}
 
 variable "nodes_sa" {
   default     = "default"
@@ -173,15 +137,95 @@ variable "gke_node_tag" {
   description = "GKE cluster nodes tag"
 }
 
-# variable "ip_range_pods" {
-#   default = "10.1.1.0/24"
-#   description = "The secondary ip range to use for pods"
-# }
+variable "main_node_pool" {
+  description = "List of parameters for main node pool"
+  default = {
+    initial_node_count = 1
 
-# variable "ip_range_services" {
-#   default = "10.1.2.0/24"
-#   description = "The secondary ip range to use for pods"
-# }
+    autoscaling = {
+      min_node_count = "1"
+      max_node_count = "5"
+    }
+
+    node_config = {}
+  }
+}
+
+variable "training_node_pool" {
+  description = "List of parameters for training node pool"
+  default = {
+    node_config = {
+      machine_type = "n1-highcpu-8"
+      disk_size_gb = "100"
+      labels = {
+        "mode" = "legion-training"
+      }
+      taint = [{
+        key    = "dedicated"
+        value  = "training"
+        effect = "NO_SCHEDULE"
+      }]
+    }
+  }
+}
+
+variable "training_gpu_node_pool" {
+  description = "List of parameters for training gpu node pool"
+  default = {
+    node_config = {
+      machine_type = "n1-highcpu-8"
+      disk_size_gb = "100"
+      labels = {
+        "mode" = "legion-training-gpu"
+      }
+      guest_accelerator = [{
+        type  = "nvidia-tesla-p100"
+        count = "2"
+      }]
+    }
+  }
+}
+
+variable "packaging_node_pool" {
+  description = "List of parameters for packaging node pool"
+  default = {
+    autoscaling = {
+      max_node_count = "3"
+    }
+
+    node_config = {
+      disk_size_gb = "100"
+      labels = {
+        "mode" = "legion-packaging"
+      }
+      taint = [{
+        key    = "dedicated"
+        value  = "packaging"
+        effect = "NO_SCHEDULE"
+      }]
+    }
+  }
+}
+
+variable "model_deployment_node_pool" {
+  description = "List of parameters for model deployment node pool"
+  default = {
+    autoscaling = {
+      max_node_count = "3"
+    }
+
+    node_config = {
+      labels = {
+        "mode" = "legion-deployment"
+      }
+      taint = [{
+        key    = "dedicated"
+        value  = "deployment"
+        effect = "NO_SCHEDULE"
+      }]
+    }
+  }
+}
 
 ###############
 # Bastion host
