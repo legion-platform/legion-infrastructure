@@ -54,6 +54,10 @@ variable "sp_secret" {
   description = "Service Principal account secret"
 }
 
+variable "allowed_ips" {
+  description = "CIDRs to allow access from"
+}
+
 variable "node_pools" {
   description = "List of k8s node pools map definitions"
   default     = []
