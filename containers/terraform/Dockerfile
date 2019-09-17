@@ -10,14 +10,14 @@ RUN apt-get update && apt-get install -y \
 
 # setup locale
 RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
-COPY containers/ansible/default_locale /etc/default/locale
+COPY containers/terraform/default_locale /etc/default/locale
 RUN chmod 0755 /etc/default/locale
 ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
 
 # Install kubectl
-ENV KUBECTL_VERSION=v1.10.6
+ENV KUBECTL_VERSION=v1.13.7
 RUN wget -qO /usr/local/bin/kubectl "https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" && \
     chmod a+x /usr/local/bin/kubectl
 
@@ -46,11 +46,15 @@ RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | apt-key add - &
     apt-get update -y && apt-get install azure-cli -y
 
 # Install Hiera
-RUN curl https://bootstrap.pypa.io/get-pip.py |python3 && \
+RUN curl -sL https://bootstrap.pypa.io/get-pip.py | python3 && \
     pip3 install pyyaml==5.1.1 && \
     gem install hiera hiera-eyaml
 
+COPY vars_template.yaml /opt/legion/
+COPY tools/hiera_exporter_helper.sh /usr/bin/hiera_exporter_helper
 COPY tools/hiera_exporter /opt/legion/tools/hiera_exporter
+COPY tools/tf_runner.sh /usr/bin/tf_runner
+
 
 # Deploy Legion
 COPY terraform /opt/legion/terraform
