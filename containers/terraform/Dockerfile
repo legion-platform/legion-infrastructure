@@ -43,7 +43,7 @@ RUN CLOUD_SDK_REPO="cloud-sdk-$(grep VERSION_CODENAME /etc/os-release | cut -d '
 # Install Azure CLI
 RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
     echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(grep VERSION_CODENAME /etc/os-release | cut -d '=' -f 2) main" | tee /etc/apt/sources.list.d/azure-cli.list && \
-    apt-get update -y && apt-get install azure-cli -y
+    apt-get update -y && apt-get install azure-cli -y && rm -rf /var/lib/apt/lists/*
 
 # Install Hiera
 RUN curl -sL https://bootstrap.pypa.io/get-pip.py | python3 && \
