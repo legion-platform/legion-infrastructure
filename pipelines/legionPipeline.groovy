@@ -6,47 +6,6 @@ def buildDescription(){
     }
 }
 
-def ansibleDebugRunCheck(String debugRun) {
-    // Run ansible playbooks and helm charts from sources in workspace and use verbose output for debug purposes
-    if (debugRun == "true" ) {
-      ansibleHome =  "${WORKSPACE}/ansible"
-      ansibleVerbose = '-vvv'
-    } else {
-      ansibleHome = env.ansibleHome
-      ansibleVerbose = env.ansibleVerbose
-    }
-}
-
-def getWanIp() {
-    agentWanIp = sh returnStdout: true, script: "curl -s http://checkip.amazonaws.com/ |tr -d '\n'"
-    print("Running on: " + agentWanIp)
-    env.agentWanIp = agentWanIp
-}
-
-def createCluster() {
-    withCredentials([
-    file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Create cluster') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook create-cluster.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile} \
-                        legion_infra_version=${env.param_legion_infra_version} \
-                        skip_kops=${env.param_skip_kops} \
-                        helm_repo=${env.param_helm_repo}" 
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
 def createGCPCluster() {
     withCredentials([
     file(credentialsId: "${env.gcpCredential}", variable: 'gcpCredential')]) {
@@ -56,131 +15,26 @@ def createGCPCluster() {
             file(credentialsId: "${env.hieraPublicPKCSKey}", variable: 'PublicPkcsKey')]) {
                 withAWS(credentials: 'kops') {
                     wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                        docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root") {
+                        docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e PROFILE=${env.clusterProfile} -u root") {
                             stage('Extract Hiera data') {
-                                extractHiera("json")
+                                extractHiera()
                             }
-                            stage('Create GCP resources') {
-                                sh """
-                                set -ex
-                                # Activate service account
-                                gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
-                                """
+                            stage('Create Legion Cluster') {
+                                 // Update default cluster parameters
+                                updateProfileKey("legion_infra_version", env.param_legion_infra_version)
+                                updateProfileKey("legion_version", env.param_legion_version)
+                                updateProfileKey("legion_helm_repo", env.param_helm_repo)
+                                updateProfileKey("docker_repo", env.param_docker_repo)
+                                updateProfileKey("model_reference", commitID)
 
-                                terraformRun("apply", "gke_create")
-
-                                sh """
-                                # Authorize Kube api access
-                                gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${env.param_gcp_zone} --project=${env.param_gcp_project}
-                                """
-                            }
-                            stage('Init HELM') {
-                                terraformRun("apply", "helm_init")
-                                sh """
-                                # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
-                                helm init --client-only
-                                """
+                                sh'tf_runner create'
                             }
                             stage('Create cluster specific private DNS zone') {
+                                // Run terraform DNS state to establish DNS peering between Jenkins agent and target cluster
                                 tfExtraVars = "-var=\"zone_type=FORWARDING\" \
                                 -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\" \
                                 -var=\"networks_to_add=[\\\"infra-vpc\\\"]\""
                                 terraformRun("apply", "cluster_dns", "${tfExtraVars}", "${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns", "bucket=${env.param_cluster_name}-tfstate")
-                            }
-                            stage('Setup K8S Legion dependencies') {
-                                tfExtraVars = "-var=\"legion_infra_version=${env.param_legion_infra_version}\" \
-                                -var=\"legion_helm_repo=${env.param_helm_repo}\" \
-                                -var=\"docker_repo=${env.param_docker_repo}\""
-                                terraformRun("apply", "k8s_setup", "${tfExtraVars}")
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-def terminateCluster() {
-    withCredentials([
-    file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Terminate cluster') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook terminate-cluster.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile}"
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
-def deployLegion() {
-    withCredentials([
-    file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Deploy Legion') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook deploy-legion.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile} \
-                        legion_version=${env.param_legion_version}  \
-                        pypi_repo=${env.param_pypi_repo} \
-                        helm_repo=${env.param_helm_repo} \
-                        docker_repo=${env.param_docker_repo} \
-                        model_reference=${commitID}"
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
-def deployLegionToGCP() {
-    withCredentials([
-    file(credentialsId: "${env.gcpCredential}", variable: 'gcpCredential')]) {
-        withCredentials([
-        file(credentialsId: "${env.hieraPrivatePKCSKey}", variable: 'PrivatePkcsKey')]) {
-            withCredentials([
-            file(credentialsId: "${env.hieraPublicPKCSKey}", variable: 'PublicPkcsKey')]) {
-                withAWS(credentials: 'kops') {
-                    wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                        docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -u root") {
-                            stage('Extract Hiera data') {
-                                    extractHiera("json")
-                                }
-                            stage('Deploy Legion') {
-                                sh """
-                                set -ex
-                                # Authorize GCP access
-                                gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
-
-                                # Setup Kube api access
-                                gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${env.param_gcp_zone} --project=${env.param_gcp_project}
-                                gcloud container clusters update ${env.param_cluster_name} --zone ${env.param_gcp_zone} --enable-master-authorized-networks --master-authorized-networks "${env.agentWanIp}/32"
-
-                                # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
-                                helm init --client-only
-                                """
-                                
-                                tfDeployVars = "-var=\"legion_version=${env.param_legion_version}\" \
-                                -var=\"legion_helm_repo=${env.param_helm_repo}\" \
-                                -var=\"docker_repo=${env.param_docker_repo}\" \
-                                -var=\"model_reference=${commitID}\""
-
-                                terraformRun("apply", "legion", "${tfDeployVars}")
                             }
                         }
                     }
@@ -199,42 +53,25 @@ def destroyGcpCluster() {
             file(credentialsId: "${env.hieraPublicPKCSKey}", variable: 'PublicPkcsKey')]) {
                 withAWS(credentials: 'kops') {
                     wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                        docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root") {
+                        docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e PROFILE=${env.clusterProfile} -u root") {
                             stage('Extract Hiera data') {
-                                extractHiera("json")
+                                extractHiera()
                             }
-                            stage('Remove Legion cluster if exists') {
-                                sh"""
-                                # Setup GCP credentials
-                                gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
-                                """
-                                cluster_status = sh(script: "gcloud container clusters list --zone ${env.param_gcp_zone}", returnStdout: true)
-                                if (!cluster_status.contains("${env.param_cluster_name}")) {
-                                    currentBuild.result = 'SUCCESS'
-                                    return
-                                }
-                                else {
-                                    setupGcpAccess()
-                                    sh """
-                                    # Init Helm repo (workaround for https://github.com/terraform-providers/terraform-provider-helm/issues/23)
-                                    helm init --client-only
-                                    """
-                                    // Temp workaround for #968 issue
-                                    sh"""
-                                    # Remove auto-generated fw rules
-                                    gcloud compute firewall-rules list --filter='name:k8s- AND network:${env.param_cluster_name}-vpc' --format='value(name)' --project='${env.param_gcp_project}'| while read i; do if (gcloud compute firewall-rules describe --project='${env.param_gcp_project}'); then gcloud compute firewall-rules delete \$i --quiet; fi; done
-                                    """
-                                    terraformRun("destroy", "legion")
-                                    terraformRun("destroy", "k8s_setup")
-                                    terraformRun("destroy", "helm_init")
+                            stage('Destroy Legion Cluster') {
+                                // Update default cluster parameters
+                                updateProfileKey("legion_infra_version", env.param_legion_infra_version)
+                                updateProfileKey("legion_version", env.param_legion_version)
+                                updateProfileKey("legion_helm_repo", env.param_helm_repo)
+                                updateProfileKey("docker_repo", env.param_docker_repo)
 
-                                    terraformRun("destroy", "cluster_dns", "-var=\"zone_type=FORWARDING\" -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\"", "${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns", "bucket=${env.param_cluster_name}-tfstate")
-
-                                    sh"""
-                                    gcloud compute firewall-rules delete ${env.param_cluster_name}-jenkins-access --project=${env.param_gcp_project} --quiet ||true
-                                    """
-                                    terraformRun("destroy", "gke_create", "-var=\"agent_cidr=${env.agentWanIp}/32\"")
-                                }
+                                sh'tf_runner destroy'
+                            }
+                            stage('Destroy cluster specific private DNS zone') {
+                                terraformRun("destroy", "cluster_dns", "-var=\"zone_type=FORWARDING\" -var=\"zone_name=${env.param_cluster_name}.ailifecycle.org\"", "${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns", "bucket=${env.param_cluster_name}-tfstate")
+                            }
+                            stage('Cleanup workspace') {
+                                // Cleanup profiles directory
+                                sh"rm -rf ${WORKSPACE}/legion-profiles/ ||true"
                             }
                         }
                     }
@@ -242,192 +79,18 @@ def destroyGcpCluster() {
             }
         }
     }
-}
-
-def legionScope(Closure body) {
-    withCredentials([file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            docker.image("${env.param_docker_repo}/legion-pipeline-agent:${env.param_legion_version}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                downloadSecrets(vault)
-                sh """
-                    kubectl config set-context \$(kubectl config current-context) --namespace=${env.param_legion_namespace}
-                    legionctl login --edi https://edi.${env.param_profile} --token "${env.param_dex_token}"
-                """
-
-                body()
-            }
-        }
-    }
-}
-
-def updateTLSCert() {
-    withCredentials([
-    file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Reissue TLS Certificates') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook update-tls-certificate.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile} \
-                        vault_pass=${vault}"
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
-def updateTLSCertGCP() {
-    withCredentials([
-    file(credentialsId: "${env.gcpCredential}", variable: 'gcpCredential')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion -e HOME=/opt/legion -e GCE_EMAIL=${env.param_gcp_sa_email} -e GCE_PROJECT=${env.param_gcp_project} -e GCE_CREDENTIALS_FILE_PATH=${gcpCredential} -u root") {
-                    stage('Reissue TLS Certificates') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook update-tls-certificate-gcp.yml \
-                        ${ansibleVerbose} \
-                        --extra-vars "cluster_name=${env.param_cluster_name}"
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
-def downloadSecrets(String vault) {
-    sh """
-        set -e
-        export CLUSTER_NAME="${env.param_profile}"
-        export PATH_TO_PROFILE_FILE="profiles/${env.param_profile}.yml"
-        export CLUSTER_STATE_STORE=\"\$(yq -r .state_store \$PATH_TO_PROFILE_FILE)\"
-        echo \"Loading kubectl config from \$CLUSTER_STATE_STORE for cluster \$CLUSTER_NAME\"
-        export CREDENTIAL_SECRETS=".secrets.yaml"
-
-        aws s3 cp \$CLUSTER_STATE_STORE/vault/${env.param_profile} \$CLUSTER_NAME
-        ansible-vault decrypt --vault-password-file=${vault} --output \$CREDENTIAL_SECRETS \$CLUSTER_NAME
-
-        kops export kubecfg --name \$CLUSTER_NAME --state \$CLUSTER_STATE_STORE
-    """
 }
 
 def setupGcpAccess() {
     sh """
         set -ex
+
         # Authorize GCP access
-        gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
+        gcloud auth activate-service-account --key-file=${gcpCredential} --project=${gcp_project_id}
 
         # Setup Kube api access
-        gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${env.param_gcp_zone} --project=${env.param_gcp_project}
-        gcloud container clusters update ${env.param_cluster_name} --zone ${env.param_gcp_zone} --enable-master-authorized-networks --master-authorized-networks "${env.agentWanIp}/32"
-
-        # Setup firewall rule
-        gcloud compute firewall-rules create ${env.param_cluster_name}-jenkins-access \
-        --project=${env.param_gcp_project} --network=${env.param_cluster_name}-vpc \
-        --description "Allow incoming traffic from Jenkins agent" \
-        --allow tcp:443 --direction INGRESS --source-ranges="${env.agentWanIp}/32"
+        gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${gcp_zone}
         """
-}
-
-def revokeGcpAccess() {
-    withCredentials([
-    file(credentialsId: "${env.gcpCredential}", variable: 'gcpCredential')]) {
-        wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-            docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -u root") {
-                stage('Revoke jenkins access') {
-                    sh """
-                        # Authorize GCP access
-                        gcloud auth activate-service-account --key-file=${gcpCredential} --project=${env.param_gcp_project}
-
-                        # Revoke Kube api access by setting allowed cidrs as loopback host
-                        gcloud container clusters update ${env.param_cluster_name} --zone ${env.param_gcp_zone} --master-authorized-networks '127.0.0.1/32' ||true
-
-                        # Revoke agent access
-                        gcloud compute firewall-rules delete ${env.param_cluster_name}-jenkins-access --project=${env.param_gcp_project} --quiet ||true
-
-                        # Cleanup profiles directory
-                        [ -d ${WORKSPACE}/legion-profiles/ ] && rm -rf ${WORKSPACE}/legion-profiles/
-                    """
-                }
-            }
-        }
-    }
-}
-
-def runRobotTests(tags="") {
-    withCredentials([
-    file(credentialsId: "${env.credentials_name}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/legion-pipeline-agent:${env.param_legion_version}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Run Robot tests') {
-                        dir("${WORKSPACE}"){
-                            def tags_list = tags.toString().trim().split(',')
-                            def robot_tags = []
-                            def nose_tags = []
-
-                            for (item in tags_list) {
-                                if (item.startsWith('-')) {
-                                    item = item.replace("-","")
-                                    robot_tags.add(" -e ${item}")
-                                    nose_tags.add(" -a !${item}")
-                                    }
-                                else if (item?.trim()) {
-                                    robot_tags.add(" -i ${item}")
-                                    nose_tags.add(" -a ${item}")
-                                }
-                            }
-
-                            env.robot_tags= robot_tags.join(" ")
-                            env.nose_tags = nose_tags.join(" ")
-
-                            downloadSecrets(vault)
-
-                            sh """
-                                cp .secrets.yaml /opt/legion/
-                                cd /opt/legion
-
-                                echo "Starting robot tests"
-                                make CLUSTER_NAME=${env.param_profile} \
-                                     LEGION_VERSION=${env.param_legion_version} e2e-robot || true
-
-                                cp -R target/ ${WORKSPACE}
-                            """
-
-                            robot_report = sh(script: 'find target/ -name "*.xml" | wc -l', returnStdout: true)
-
-                            if (robot_report.toInteger() > 0) {
-                                step([
-                                    $class : 'RobotPublisher',
-                                    outputPath : 'target/',
-                                    outputFileName : "*.xml",
-                                    disableArchiveOutput : false,
-                                    passThreshold : 100,
-                                    unstableThreshold: 95.0,
-                                    onlyCritical : true,
-                                    otherFiles : "*.png",
-                                ])
-                            }
-                            else {
-                                echo "No '*.xml' files for generating robot report"
-                                currentBuild.result = 'UNSTABLE'
-                            }
-
-                            // Cleanup
-                            sh "rm -rf ${WORKSPACE}/target/"
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 def runRobotTestsAtGcp(tags="") {
@@ -441,7 +104,9 @@ def runRobotTestsAtGcp(tags="") {
                     wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
                         docker.image("${env.param_docker_repo}/k8s-terraform:${env.param_legion_infra_version}").inside("-e GOOGLE_CREDENTIALS=${gcpCredential} -e CLUSTER_NAME=${env.param_cluster_name} -u root") {
                             stage('Extract Hiera data') {
-                                extractHiera("json")
+                                extractHiera()
+                                gcp_zone = sh(script: "jq '.location' ${env.clusterProfile}", returnStdout: true)
+                                gcp_project_id = sh(script: "jq '.project_id' ${env.clusterProfile}", returnStdout: true)
                             }
                         }
                         docker.image("${env.param_docker_repo}/legion-pipeline-agent:${env.param_legion_version}").inside("-e HOME=/opt/legion -u root") {
@@ -472,7 +137,7 @@ def runRobotTestsAtGcp(tags="") {
                                         cd /opt/legion
                                         echo "Starting robot tests"
                                         make GOOGLE_APPLICATION_CREDENTIALS=${gcpCredential} \
-                                            CLUSTER_PROFILE=${WORKSPACE}/cluster_profile.json \
+                                            CLUSTER_PROFILE=${env.clusterProfile} \
                                             ROBOT_THREADS=6 \
                                             LEGION_VERSION=${env.param_legion_version} e2e-robot || true
 
@@ -498,8 +163,11 @@ def runRobotTestsAtGcp(tags="") {
                                         currentBuild.result = 'UNSTABLE'
                                     }
 
-                                    // Cleanup
+                                    // Cleanup tests files
                                     sh "rm -rf ${WORKSPACE}/target/"
+
+                                    // Cleanup profiles directory
+                                    sh"rm -rf ${env.clusterProfile} ||true"
                                 }
                             }
                         }
@@ -510,130 +178,44 @@ def runRobotTestsAtGcp(tags="") {
     }
 }
 
-def deployLegionEnclave() {
-    withCredentials([
-        file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion/ansible -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Deploy Legion') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook deploy-legion.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile} \
-                        legion_version=${env.param_legion_version} \
-                        pypi_repo=${env.param_pypi_repo} \
-                        docker_repo=${env.param_docker_repo} \
-                        helm_repo=${env.param_helm_repo} \
-                        enclave_name=${env.param_enclave_name}"
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
-def terminateLegionEnclave() {
-    withCredentials([
-        file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion/ansible -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Terminate Legion Enclave') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook terminate-legion-enclave.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile} \
-                        enclave_name=${env.param_enclave_name}"
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
-def cleanupClusterSg(String cleanupContainerVersion) {
-    withCredentials([
-    file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${cleanupContainerVersion}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    stage('Cleanup Cluster SG') {
-                        sh """
-                        cd ${ansibleHome} && \
-                        ansible-playbook cleanup-cluster-sg.yml \
-                        ${ansibleVerbose} \
-                        --vault-password-file=${vault} \
-                        --extra-vars "profile=${env.param_profile}" 
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
-def authorizeJenkinsAgent() {
-    withCredentials([
-    file(credentialsId: "vault-${env.param_profile}", variable: 'vault')]) {
-        withAWS(credentials: 'kops') {
-            wrap([$class: 'AnsiColorBuildWrapper', colorMapName: "xterm"]) {
-                docker.image("${env.param_docker_repo}/k8s-ansible:${env.param_legion_infra_version}").inside("-e HOME=/opt/legion -v ${WORKSPACE}/profiles:/opt/legion/profiles -u root") {
-                    sh """
-                    cd ${ansibleHome} && \
-                    ansible-playbook authorize-jenkins-agent.yml \
-                    ${ansibleVerbose} \
-                    --vault-password-file=${vault} \
-                    --extra-vars "profile=${env.param_profile}" 
-                    """
-                }
-            }
-        }
-    }
-}
-
-def terraformRun(command, tfModule, extraVars='', workPath="${terraformHome}/env_types/${env.param_cluster_type}/${tfModule}/", backendConfigBucket="bucket=${env.param_cluster_name}-tfstate", varFile="\${WORKSPACE}/cluster_profile.json") {
+def terraformRun(command, tfModule, extraVars='', workPath="${terraformHome}/env_types/${env.param_cluster_type}/${tfModule}/", backendConfigBucket="bucket=${env.param_cluster_name}-tfstate", varFile="${env.clusterProfile}") {
     sh """ #!/bin/bash -xe
         cd ${workPath}
 
         export TF_DATA_DIR=/tmp/.terraform-${env.param_cluster_name}-${tfModule}
         
-        terraform init -backend-config="${backendConfigBucket}"
+        terraform init -no-color -backend-config="${backendConfigBucket}"
         
         echo "Execute ${command} on ${tfModule} state"
 
         if [ ${tfModule} = "cluster_dns" ]; then
-            terraform ${command} -auto-approve -var-file=${varFile} ${extraVars}
+            terraform ${command} -no-color -auto-approve -var-file=${varFile} ${extraVars}
         elif [ ${command} = "apply" ]; then
-            terraform plan -var-file=${varFile} ${extraVars}
-            terraform ${command} -auto-approve -var-file=${varFile} ${extraVars}
+            terraform plan -no-color -var-file=${varFile} ${extraVars}
+            terraform ${command} -no-color -auto-approve -var-file=${varFile} ${extraVars}
         else
-            terraform ${command} -auto-approve -var-file=${varFile} ${extraVars}
+            terraform ${command} -no-color -auto-approve -var-file=${varFile} ${extraVars}
         fi
     """
 }
 
-def extractHiera(format) {
-    // checkout repo with hieradata
-    sshagent(["${env.legionProfilesGitlabKey}"]) {
-        sh"""
-        #TODO get repo url from passed parameters
-        mkdir -p \$(getent passwd \$(whoami) | cut -d: -f6)/.ssh && ssh-keyscan git.epam.com >> \$(getent passwd \$(whoami) | cut -d: -f6)/.ssh/known_hosts
-        if [ ! -d "legion-profiles" ]; then
-            git clone ${env.param_legion_profiles_repo} legion-profiles
-        fi
-        cd legion-profiles && git checkout ${env.param_legion_profiles_branch}
-        """
-    }
+def updateProfileKey(profilePath=env.clusterProfile, key, value) {
+	contentReplace(
+	    configs: [
+	        fileContentReplaceConfig(
+	            configs: [
+	                fileContentReplaceItemConfig(
+	                    search: "\"${key}.*",
+	                    replace: "\"${key}\": \"${value}\",")
+	                ],
+	            fileEncoding: 'UTF-8',
+	            filePath: profilePath)
+	        ])
+}
 
+def extractHiera() {
     // export vars
-    sh """
+    sh """#!/bin/bash -ex
     cat ${PrivatePkcsKey} > legion-profiles/private_key.pkcs7.pem
     cat ${PublicPkcsKey} > legion-profiles/public_key.pkcs7.pem
     cp tools/hiera_exporter legion-profiles
@@ -643,23 +225,11 @@ def extractHiera(format) {
     --vars-template ../vars_template.yaml \
     --hiera-environment ${env.param_cluster_name} \
     --hiera-cloud ${env.param_cloud_provider} \
-    --output-format ${format} \
-    --output-file ${WORKSPACE}/cluster_profile.${format}
+    --output-format json \
+    --output-file "${env.clusterProfile}"
+    chmod 777 ${env.clusterProfile} ${WORKSPACE}/legion-profiles/*
     """
 }
-
-def terraformOutput(tfModule, params = '-json', workPath="${terraformHome}/env_types/${env.param_cluster_type}/${tfModule}/", backendConfigBucket="bucket=${env.param_cluster_name}-tfstate") {
-    sh """
-        cd ${workPath}
-        export TF_DATA_DIR=/tmp/.terraform-${env.param_cluster_name}-${tfModule}
-        terraform init -backend-config="${backendConfigBucket}"
-    """
-    sh returnStdout:true, script: """ #!/bin/bash -xe
-        cd ${workPath}
-        export TF_DATA_DIR=/tmp/.terraform-${env.param_cluster_name}-${tfModule}
-        terraform output ${params}
-     """
- }
 
 def setBuildMeta(updateVersionScript) {
 
@@ -710,10 +280,10 @@ def setBuildMeta(updateVersionScript) {
 
 }
 
-def setGitReleaseTag() {
+def setGitReleaseTag(git_deploy_key) {
     print('Set Release tag')
-    sshagent(["${env.param_git_deploy_key}"]) {
-        sh """
+    sshagent([git_deploy_key]) {
+        sh """#!/bin/bash -ex
         if [ `git tag |grep -x ${env.param_release_version}` ]; then
             if [ ${env.param_force_tag_push} = "true" ]; then
                 echo 'Removing existing git tag'
