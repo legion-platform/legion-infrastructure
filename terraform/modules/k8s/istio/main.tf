@@ -23,11 +23,12 @@ resource "helm_release" "istio-init" {
   version     = var.istio_version
   namespace   = var.istio_namespace
   repository  = "istio"
+  depends_on = [kubernetes_namespace.istio]
 }
 
 resource "null_resource" "delay" {
   provisioner "local-exec" {
-    command = "timeout 200 bash -c 'until [ $(kubectl get crds | grep \"istio.io\" | wc -l) -ge 23 ]; do sleep 5; done'"
+    command = "timeout 200 bash -c 'until [ $(kubectl get customresourcedefinitions -l release=istio --no-headers | wc -l) -ge 23 ]; do sleep 5; done'"
   }
   depends_on = [helm_release.istio-init]
 }
@@ -42,11 +43,12 @@ data "template_file" "istio_values" {
 }
 
 resource "helm_release" "istio" {
-  name        = "istio"
-  chart       = "istio/istio"
-  version     = var.istio_version
-  namespace   = var.istio_namespace
-  repository  = "istio"
+  name       = "istio"
+  chart      = "istio/istio"
+  version    = var.istio_version
+  namespace  = var.istio_namespace
+  repository = "istio"
+  timeout    = "600"
 
   values = [
     data.template_file.istio_values.rendered,
