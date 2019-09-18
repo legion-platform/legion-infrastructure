@@ -4,9 +4,9 @@ provider "azurerm" {
 
 provider "helm" {
   version         = "0.10.2"
-  install_tiller  = true
   namespace       = "kube-system"
   service_account = "tiller"
+  install_tiller  = true
   tiller_image    = var.tiller_image
   init_helm_home  = true
 

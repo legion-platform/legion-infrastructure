@@ -1,3 +1,13 @@
+
+variable "azure_resource_group" {
+  description = "Azure base resource group name"
+  default     = "legion-rg"
+}
+
+variable "secrets_storage" {
+  description = "Cluster secrets storage"
+}
+
 ##################
 # Common
 ##################
@@ -6,30 +16,16 @@ variable "cluster_name" {
   description = "Legion cluster name"
 }
 
-variable "project_id" {
-  description = "Target project id"
-}
-
-variable "zone" {
-  default     = "us-east1-b"
-  description = "Default zone"
-}
-
-variable "region" {
-  default     = "us-east1"
-  description = "Region of resources"
-}
-
-variable "secrets_storage" {
-  description = "Cluster secrets storage"
-}
-
 variable "legion_helm_repo" {
   description = "Legion helm repo"
 }
 
 variable "root_domain" {
   description = "Legion cluster root domain"
+}
+
+variable "tiller_image" {
+  default = "gcr.io/kubernetes-helm/tiller:v2.14.0"
 }
 
 ##################

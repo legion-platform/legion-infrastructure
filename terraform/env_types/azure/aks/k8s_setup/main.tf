@@ -14,7 +14,7 @@ locals {
 }
 
 module "get_tls" {
-  source = "../../../../modules/tls"
+  source          = "../../../../modules/tls"
   secrets_storage = var.secrets_storage
   cluster_name    = var.cluster_name
 }
@@ -37,11 +37,11 @@ module "nginx-ingress" {
 }
 
 # module "dashboard" {
-#   source                    = "../../../../modules/k8s/dashboard"
-#   cluster_name              = var.cluster_name
-#   root_domain               = var.root_domain
-#   tls_secret_key            = module.base_setup.tls_secret_key
-#   tls_secret_crt            = module.base_setup.tls_secret_crt
+#   source         = "../../../../modules/k8s/dashboard"
+#   cluster_name   = var.cluster_name
+#   root_domain    = var.root_domain
+#   tls_secret_key = module.get_tls.tls_secret_key
+#   tls_secret_crt = module.get_tls.tls_secret_crt
 # }
 
 module "auth" {

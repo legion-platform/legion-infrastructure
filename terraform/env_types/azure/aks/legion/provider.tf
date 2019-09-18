@@ -7,17 +7,15 @@ provider "aws" {
 }
 
 provider "google" {
-  version = "~> 2.2"
-  region  = var.region
-  zone    = var.zone
-  project = var.project_id
+  version = "2.15.0"
 }
 
 provider "helm" {
-  install_tiller  = true
+  version         = "0.10.2"
   namespace       = "kube-system"
   service_account = "tiller"
-  tiller_image    = "gcr.io/kubernetes-helm/tiller:v2.11.0"
+  install_tiller  = false
+  tiller_image    = var.tiller_image
 }
 
 provider "kubernetes" {

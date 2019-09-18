@@ -36,27 +36,20 @@ variable "root_domain" {
   description = "Legion cluster root domain"
 }
 
+variable "dns_zone_name" {
+  description = "Cluster root DNS zone name"
+  default     = "example-org-zone"
+}
+
+variable "allowed_ips" {
+  description = "List of CIDRs to allow access from"
+  default     = ["0.0.0.0/0"]
+}
+
 variable "docker_repo" {
   description = "Legion Docker repo url"
 }
 
-# variable "dns_zone_name" {
-#   description = "Cluster root DNS zone name"
-# }
-# variable "network_name" {
-#   description = "The VPC network to host the cluster in"
-# }
-
-variable "aks_cidr" {
-  description = "VPC subnet range"
-}
-
-########################
-# Prometheus monitoring
-########################
-# variable "allowed_ips" {
-#   description = "CIDR to allow access from"
-# }
 variable "alert_slack_url" {
   description = "Alert slack usrl"
   default     = "https://localhost"
@@ -74,10 +67,6 @@ variable "grafana_storage_class" {
   default     = "standard"
   description = "Grafana storage class"
 }
-
-# variable "github_org_name" {
-#   description = "Github Organization for dex authentication"
-# }
 
 variable "monitoring_namespace" {
   default     = "kube-monitoring"
