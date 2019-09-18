@@ -60,12 +60,6 @@ variable "allowed_ips" {
   description = "CIDRs to allow access from"
 }
 
-#variable "agent_cidr" {
-#  description = "Jenkins agent CIDR to allow access for CI jobs or your WAN address in case of locla run"
-#}
-#variable "dns_zone_name" {
-#  description = "Cluster root DNS zone name"
-#}
 # Next two variables are ID and secret of Service Principal account.
 # These should be defined as TF_VAR_sp_ckuent_id and TF_VAR_sp_secret environment variables
 variable "sp_client_id" {
