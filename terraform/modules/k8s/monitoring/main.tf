@@ -12,6 +12,9 @@ resource "kubernetes_namespace" "monitoring" {
     }
     name = var.monitoring_namespace
   }
+  timeouts {
+    delete = "10m"
+  }
 }
 
 resource "kubernetes_secret" "tls_monitoring" {
@@ -48,6 +51,7 @@ resource "helm_release" "monitoring" {
   version    = var.legion_infra_version
   namespace  = var.monitoring_namespace
   repository = "legion"
+  timeout    = "600"
 
   values = [
     data.template_file.monitoring_values.rendered
