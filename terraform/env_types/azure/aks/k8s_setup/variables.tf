@@ -11,6 +11,10 @@ variable "secrets_storage" {
 
 ############################################################################################################
 
+variable "cluster_type" {
+  description = "Cloud provider"
+}
+
 variable "cluster_name" {
   default     = "legion"
   description = "Legion cluster name"
