@@ -3,7 +3,7 @@
 ######################################################## 
  
 # Oauth2 proxy 
-data "template_file" "oauth2-proxy_values" { 
+data "template_file" "oauth2-proxy_values" {
   template = file("${path.module}/templates/oauth2-proxy.yaml")
   vars = { 
     cluster_name              = var.cluster_name
@@ -22,11 +22,12 @@ data "template_file" "oauth2-proxy_values" {
 } 
  
 resource "helm_release" "oauth2-proxy" { 
-    name            = "oauth2-proxy" 
-    chart           = "stable/oauth2-proxy" 
+    name            = "oauth2-proxy"
+    chart           = "stable/oauth2-proxy"
     version         = var.oauth_helm_chart_version
-    namespace       = "kube-system" 
-    recreate_pods   = "true" 
+    namespace       = "kube-system"
+    recreate_pods   = "true"
+    timeout         = "600"
  
     values = [ 
       data.template_file.oauth2-proxy_values.rendered
