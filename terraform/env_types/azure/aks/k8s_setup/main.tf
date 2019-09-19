@@ -39,6 +39,9 @@ module "nginx-ingress" {
   dns_zone_name         = var.dns_zone_name
 }
 
+# TBD:
+# We need to make a deployment taking into account the fact that AKS installs the dashboard as add-on
+#
 # module "dashboard" {
 #   source         = "../../../../modules/k8s/dashboard"
 #   cluster_name   = var.cluster_name
@@ -88,6 +91,9 @@ module "istio" {
   legion_infra_version = var.legion_infra_version
 }
 
+# TBD:
+# Make appropriate analogue of GKE Service Account Assigner mechanism for AKS
+#
 # module "gke-saa" {
 #   source                    = "../../../../modules/k8s/gke-saa"
 #   legion_helm_repo          = var.legion_helm_repo
