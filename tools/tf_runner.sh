@@ -75,8 +75,7 @@ function GetParam() {
 }
 
 function TerraformRun() {
-	#MODULES_ROOT="/opt/legion/terraform/env_types/$(GetParam 'cluster_type')/"
-	MODULES_ROOT="/opt/cicd/GIT/legion-infrastructure/terraform/env_types/$(GetParam 'cluster_type')/"
+	MODULES_ROOT="/opt/legion/terraform/env_types/$(GetParam 'cluster_type')/"
 	TF_MODULE=$1
 	TF_COMMAND=$2
 	WORK_DIR=$MODULES_ROOT/$TF_MODULE
