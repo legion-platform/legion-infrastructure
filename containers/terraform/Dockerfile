@@ -50,6 +50,9 @@ RUN curl -sL https://bootstrap.pypa.io/get-pip.py | python3 && \
     pip3 install pyyaml==5.1.1 && \
     gem install hiera hiera-eyaml
 
+# Install awscli
+RUN pip3 install awscli
+
 COPY vars_template.yaml /opt/legion/
 COPY tools/hiera_exporter_helper.sh /usr/bin/hiera_exporter_helper
 COPY tools/hiera_exporter /opt/legion/tools/hiera_exporter
