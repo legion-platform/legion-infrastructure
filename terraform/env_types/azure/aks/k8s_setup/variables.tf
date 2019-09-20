@@ -1,31 +1,65 @@
-############################################################################################################
-
+##################
+# Common
+##################
 variable "azure_resource_group" {
   description = "Azure base resource group name"
-  default     = "legion-rg"
-}
-
-variable "secrets_storage" {
-  description = "Name of S3 bucket with TLS artifacts"
-}
-
-############################################################################################################
-
-variable "cluster_type" {
-  description = "Cloud provider"
-}
-
-variable "cluster_name" {
-  default     = "legion"
-  description = "Legion cluster name"
+  default     = ""
 }
 
 variable "aks_public_ip_name" {
   description = "Name of public IP-address used for AKS cluster"
 }
 
-variable "tiller_image" {
-  default = "gcr.io/kubernetes-helm/tiller:v2.14.0"
+variable "cluster_type" {
+  default     = "azure/aks"
+  description = "Legion cluster cloud provider type"
+}
+
+variable "project_id" {
+  description = "Target project id"
+}
+
+variable "zone" {
+  default     = "us-east1-b"
+  description = "Default zone"
+}
+
+variable "region" {
+  default     = "us-east1"
+  description = "Region of resources"
+}
+
+variable "config_context_auth_info" {
+  default     = ""
+  description = "Legion cluster context auth"
+}
+
+variable "config_context_cluster" {
+  default     = ""
+  description = "Legion cluster context name"
+}
+
+variable "region_aws" {
+  default     = "us-east-2"
+  description = "Region of AWS resources"
+}
+
+variable "aws_profile" {
+  description = "AWS profile name"
+}
+
+variable "aws_credentials_file" {
+  default     = "~/.aws/config"
+  description = "AWS credentials file location"
+}
+
+variable "secrets_storage" {
+  description = "Cluster secrets storage"
+}
+
+variable "cluster_name" {
+  default     = "legion"
+  description = "Legion cluster name"
 }
 
 variable "legion_helm_repo" {
@@ -40,23 +74,20 @@ variable "root_domain" {
   description = "Legion cluster root domain"
 }
 
-variable "dns_zone_name" {
-  description = "Cluster root DNS zone name"
-  default     = "example-org-zone"
-}
-
-variable "allowed_ips" {
-  description = "List of CIDRs to allow access from"
-  default     = ["0.0.0.0/0"]
-}
-
 variable "docker_repo" {
   description = "Legion Docker repo url"
 }
 
+########################
+# Prometheus monitoring
+########################
+variable "allowed_ips" {
+  type        = list(string)
+  description = "CIDR to allow access from"
+}
+
 variable "alert_slack_url" {
   description = "Alert slack usrl"
-  default     = "https://localhost"
 }
 
 variable "grafana_admin" {
@@ -68,7 +99,7 @@ variable "grafana_pass" {
 }
 
 variable "grafana_storage_class" {
-  default     = "standard"
+  default     = "default"
   description = "Grafana storage class"
 }
 
@@ -116,7 +147,3 @@ variable "istio_namespace" {
   description = "istio namespace"
 }
 
-variable "knative_namespace" {
-  default     = "knative-serving"
-  description = "Knative namespace"
-}

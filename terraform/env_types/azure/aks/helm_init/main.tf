@@ -12,8 +12,10 @@ locals {
 # Helm initialization
 ########################################################
 module "helm_init" {
-  source           = "../../../../modules/helm_init"
-  tiller_image     = var.tiller_image
-  legion_helm_repo = var.legion_helm_repo
-  istio_helm_repo  = var.istio_helm_repo
+  source                   = "../../../../modules/helm_init"
+  tiller_image             = var.tiller_image
+  config_context_auth_info = local.config_context_auth_info
+  config_context_cluster   = local.config_context_cluster
+  legion_helm_repo         = var.legion_helm_repo
+  istio_helm_repo          = var.istio_helm_repo
 }

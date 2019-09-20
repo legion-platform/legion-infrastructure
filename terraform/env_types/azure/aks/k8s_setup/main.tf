@@ -9,8 +9,8 @@ data "azurerm_public_ip" "aks_ext" {
 }
 
 locals {
-  config_context_auth_info = data.azurerm_kubernetes_cluster.aks.kube_config.0.username
-  config_context_cluster   = var.cluster_name
+  config_context_auth_info = var.config_context_auth_info == "" ? data.azurerm_kubernetes_cluster.aks.kube_config.0.username : var.config_context_auth_info
+  config_context_cluster   = var.config_context_cluster == "" ? var.cluster_name : var.config_context_cluster
 }
 
 module "get_tls" {
@@ -23,10 +23,15 @@ module "get_tls" {
 # K8S setup
 ########################################################
 module "base_setup" {
-  source       = "../../../../modules/k8s/base_setup"
-  cluster_name = var.cluster_name
-  tls_key      = module.get_tls.tls_secret_key
-  tls_crt      = module.get_tls.tls_secret_crt
+  source               = "../../../../modules/k8s/base_setup"
+  aws_profile          = var.aws_profile
+  aws_credentials_file = var.aws_credentials_file
+  zone                 = var.zone
+  region               = var.region
+  region_aws           = var.region_aws
+  project_id           = var.project_id
+  cluster_name         = var.cluster_name
+  secrets_storage      = var.secrets_storage
 }
 
 module "nginx-ingress" {
@@ -34,9 +39,6 @@ module "nginx-ingress" {
   cluster_type          = var.cluster_type
   aks_ingress_ip        = data.azurerm_public_ip.aks_ext.ip_address
   aks_ip_resource_group = var.azure_resource_group
-  allowed_ips           = var.allowed_ips
-  root_domain           = var.root_domain
-  dns_zone_name         = var.dns_zone_name
 }
 
 # TBD:
@@ -66,7 +68,15 @@ module "auth" {
 
 module "monitoring" {
   source                = "../../../../modules/k8s/monitoring"
+  aws_profile           = var.aws_profile
+  aws_credentials_file  = var.aws_credentials_file
+  zone                  = var.zone
+  region                = var.region
+  region_aws            = var.region_aws
+  project_id            = var.project_id
   cluster_name          = var.cluster_name
+  legion_helm_repo      = var.legion_helm_repo
+  legion_infra_version  = var.legion_infra_version
   alert_slack_url       = var.alert_slack_url
   root_domain           = var.root_domain
   grafana_admin         = var.grafana_admin
@@ -76,18 +86,16 @@ module "monitoring" {
   monitoring_namespace  = var.monitoring_namespace
   tls_secret_key        = module.get_tls.tls_secret_key
   tls_secret_crt        = module.get_tls.tls_secret_crt
-  legion_infra_version  = var.legion_infra_version
 }
 
 module "istio" {
   source               = "../../../../modules/k8s/istio"
   root_domain          = var.root_domain
   cluster_name         = var.cluster_name
-  istio_namespace      = var.istio_namespace
   monitoring_namespace = var.monitoring_namespace
-  knative_namespace    = var.knative_namespace
   tls_secret_key       = module.get_tls.tls_secret_key
   tls_secret_crt       = module.get_tls.tls_secret_crt
+  legion_helm_repo     = var.legion_helm_repo
   legion_infra_version = var.legion_infra_version
 }
 
