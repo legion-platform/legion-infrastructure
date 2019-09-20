@@ -1,6 +1,10 @@
 ##################
 # Common
 ##################
+variable "cluster_type" {
+  description = "Cluster type"
+}
+
 variable "project_id" {
   description = "Target project id"
 }
