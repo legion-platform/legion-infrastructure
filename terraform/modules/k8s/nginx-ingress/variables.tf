@@ -1,7 +1,76 @@
-variable "lb_ip_address" {
+##################
+# Common
+##################
+variable "cluster_type" {
+  description = "Cluster type"
+}
+
+variable "cluster_name" {
+  default     = "legion"
+  description = "Legion cluster name"
+}
+
+variable "root_domain" {
+  default     = ""
+  description = "Legion cluster root domain"
+}
+
+variable "allowed_ips" {
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+  description = "CIDR to allow access from"
+}
+
+variable "dns_zone_name" {
+  default     = ""
+  description = "Cluster root DNS zone name"
+}
+
+##################
+# GCP
+##################
+variable "project_id" {
+  default     = ""
+  description = "Target project id"
+}
+
+variable "zone" {
+  default     = ""
+  description = "Default zone"
+}
+
+variable "region" {
+  default     = ""
+  description = "Region of resources"
+}
+
+variable "network_name" {
+  default     = ""
+  description = "The VPC network to host the cluster in"
+}
+
+##################
+# AWS
+##################
+variable "az_list" {
+  default = []
+  type    = list(string)
+}
+
+variable "aws_lb_subnets" {
+  default = []
+  type    = list(string)
+}
+
+##################
+# Azure
+##################
+variable "aks_ingress_ip" {
+  default     = ""
   description = "Cloud Load Balancer IP address used for k8s ingress"
 }
 
-variable "replicas" {
-  default = "2"
+variable "aks_ip_resource_group" {
+  default     = ""
+  description = "Azure resource group name"
 }
