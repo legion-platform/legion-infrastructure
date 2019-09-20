@@ -1,3 +1,8 @@
+provider "helm" {
+  version        = "0.10.2"
+  install_tiller = false
+}
+
 ########################################################
 # k8s GKE Service Account Assigner
 ########################################################

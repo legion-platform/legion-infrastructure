@@ -1,3 +1,22 @@
+provider "helm" {
+  version        = "0.10.2"
+  install_tiller = false
+}
+
+provider "google" {
+  version = "~> 2.2"
+  region  = var.region
+  zone    = var.zone
+  project = var.project_id
+}
+
+provider "aws" {
+  version                 = "2.28.1"
+  region                  = var.region_aws
+  shared_credentials_file = var.aws_credentials_file
+  profile                 = var.aws_profile
+}
+
 ########################################################
 # Kubernetes Dashboard
 ########################################################

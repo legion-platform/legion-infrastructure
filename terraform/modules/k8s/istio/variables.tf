@@ -37,3 +37,7 @@ variable "knative_namespace" {
 variable "legion_infra_version" {
   description = "Legion infra release version"
 }
+
+variable "legion_helm_repo" {
+  description = "Legion helm repo"
+}

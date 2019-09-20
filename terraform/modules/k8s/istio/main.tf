@@ -1,3 +1,8 @@
+provider "helm" {
+  version        = "0.10.2"
+  install_tiller = false
+}
+
 resource "kubernetes_namespace" "istio" {
   metadata {
     name = var.istio_namespace
@@ -18,11 +23,11 @@ resource "kubernetes_secret" "tls_istio" {
 }
 
 resource "helm_release" "istio-init" {
-  name        = "istio-init"
-  chart       = "istio/istio-init"
-  version     = var.istio_version
-  namespace   = var.istio_namespace
-  repository  = "istio"
+  name       = "istio-init"
+  chart      = "istio/istio-init"
+  version    = var.istio_version
+  namespace  = var.istio_namespace
+  repository = "istio"
   depends_on = [kubernetes_namespace.istio]
 }
 
@@ -80,10 +85,10 @@ resource "kubernetes_secret" "tls_knative" {
 }
 
 resource "helm_release" "knative" {
-  name          = "knative"
-  chart         = "knative"
-  version       = var.legion_infra_version
-  namespace     = var.knative_namespace
-  repository    = "legion"
+  name       = "knative"
+  chart      = "knative"
+  version    = var.legion_infra_version
+  namespace  = var.knative_namespace
+  repository = "legion"
   depends_on = [kubernetes_namespace.knative, helm_release.istio]
 }
