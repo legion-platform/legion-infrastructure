@@ -4,7 +4,7 @@ provider "kubernetes" {
 }
 
 provider "helm" {
-  version         = "0.10.2"
+  version         = "v0.10.0"
   install_tiller  = true
   namespace       = "kube-system"
   service_account = "tiller"
@@ -81,7 +81,7 @@ resource "null_resource" "add_helm_repository_stable" {
   }
   provisioner "local-exec" {
     command = "helm repo add stable https://kubernetes-charts.storage.googleapis.com"
-}
+  }
   provisioner "local-exec" {
     when    = "destroy"
     command = "helm repo rm stable || true"

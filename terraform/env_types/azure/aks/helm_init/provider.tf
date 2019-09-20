@@ -3,7 +3,7 @@ provider "azurerm" {
 }
 
 provider "helm" {
-  version         = "0.10.2"
+  version         = "v0.10.0"
   namespace       = "kube-system"
   service_account = "tiller"
   install_tiller  = true
