@@ -1,6 +1,10 @@
 provider "helm" {
-  version        = "v0.10.0"
+  version        = "0.10.2"
   install_tiller = false
+}
+
+variable "istio_version" {
+  default = "1.2.2"
 }
 
 resource "kubernetes_namespace" "istio" {

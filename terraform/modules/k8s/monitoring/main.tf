@@ -1,5 +1,5 @@
 provider "helm" {
-  version        = "v0.10.0"
+  version        = "0.10.2"
   install_tiller = false
 }
 
@@ -18,7 +18,7 @@ resource "kubernetes_namespace" "monitoring" {
     name = var.monitoring_namespace
   }
   timeouts {
-    delete = "10m"
+    delete = "15m"
   }
 }
 

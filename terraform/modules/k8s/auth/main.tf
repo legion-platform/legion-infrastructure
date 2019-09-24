@@ -1,5 +1,5 @@
 provider "helm" {
-  version        = "v0.10.0"
+  version        = "0.10.2"
   install_tiller = false
 }
 
@@ -37,4 +37,4 @@ resource "helm_release" "oauth2-proxy" {
   values = [
     data.template_file.oauth2-proxy_values.rendered
   ]
-} 
+}
