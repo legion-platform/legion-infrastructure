@@ -51,7 +51,6 @@ pipeline {
                     // Checkout CICD repo with private DNS zone
                     sshagent(["${env.legionCicdGitlabKey}"]) {
                         sh"""
-
                         if [ ! -d "legion-cicd" ]; then
                             GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git clone ${env.param_legion_cicd_repo} legion-cicd
                         fi
