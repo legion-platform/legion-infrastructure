@@ -41,8 +41,6 @@ module "get_tls" {
 #   git_examples_reference   = var.git_examples_reference
 #   model_resources_cpu      = var.model_resources_cpu
 #   model_resources_mem      = var.model_resources_mem
-#   api_private_key          = var.api_private_key
-#   api_public_key           = var.api_public_key
 #   mlflow_toolchain_version = var.mlflow_toolchain_version
 #   git_examples_description = var.git_examples_description
 #   git_examples_web_ui_link = var.git_examples_web_ui_link

@@ -73,14 +73,6 @@ variable "docker_password" {
   description = "Legion Docker repo password"
 }
 
-variable "api_private_key" {
-  description = "RSA model private key. It is used for generation of JWT tokens."
-}
-
-variable "api_public_key" {
-  description = "RSA model public key. It is used for verification of JWT tokens."
-}
-
 variable "model_docker_url" {
   description = "Model docker url"
 }

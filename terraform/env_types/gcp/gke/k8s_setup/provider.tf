@@ -11,4 +11,3 @@ provider "google-beta" {
   zone    = var.zone
   project = var.project_id
 }
-
