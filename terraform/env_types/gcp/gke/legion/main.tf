@@ -34,4 +34,3 @@ module "legion" {
   model_oidc_jwks_url         = "${var.keycloak_url}/auth/realms/${var.keycloak_realm}/protocol/openid-connect/certs"
   model_oidc_issuer           = "${var.keycloak_url}/auth/realms/${var.keycloak_realm}"
 }
-

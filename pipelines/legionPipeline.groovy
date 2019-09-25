@@ -146,6 +146,9 @@ def runRobotTestsAtGcp(tags="") {
                                             ROBOT_THREADS=6 \
                                             LEGION_VERSION=${env.param_legion_version} e2e-robot || true
 
+                                        make CLUSTER_PROFILE=${env.clusterProfile} \
+                                             CLUSTER_NAME=${env.param_cluster_name} cleanup-e2e-robot
+
                                         cp -R target/ ${WORKSPACE}
                                     """
 
