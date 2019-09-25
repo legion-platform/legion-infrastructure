@@ -176,29 +176,29 @@ function TerraformDestroy() {
 		TerraformRun k8s_setup destroy
 		echo 'INFO : Destroy Helm'
 		TerraformRun helm_init destroy
-		case $(GetParam 'cluster_type') in
-			"aws/eks")
-				echo 'INFO : Destroy EKS cluster'
-				TerraformRun eks_create destroy
-				;;
-			"gcp/gke")
-				echo 'INFO : Remove auto-generated fw rules'
-				fw_filter="name:k8s- AND network:$(GetParam 'cluster_name')-vpc"
-				for i in $(gcloud compute firewall-rules list --filter="${fw_filter}" --format='value(name)' --project=$(GetParam 'project_id')); do
-					gcloud compute firewall-rules delete $i --quiet
-				done
-				echo 'INFO : Destroy GKE cluster'
-				TerraformRun gke_create destroy
-				;;
-			"azure/aks")
-				echo 'INFO : Destroy AKS cluster'
-				TerraformRun aks_create destroy
-				;;
-		esac
 		rm -rf /root/.kube
 	else
 		echo "ERROR: There is no cluster found with name \"$(GetParam 'cluster_name')\""
 	fi
+	case $(GetParam 'cluster_type') in
+		"aws/eks")
+			echo 'INFO : Destroy EKS cluster'
+			TerraformRun eks_create destroy
+			;;
+		"gcp/gke")
+			echo 'INFO : Remove auto-generated fw rules'
+			fw_filter="name:k8s- AND network:$(GetParam 'cluster_name')-vpc"
+			for i in $(gcloud compute firewall-rules list --filter="${fw_filter}" --format='value(name)' --project=$(GetParam 'project_id')); do
+				gcloud compute firewall-rules delete $i --quiet
+			done
+			echo 'INFO : Destroy GKE cluster'
+			TerraformRun gke_create destroy
+			;;
+		"azure/aks")
+			echo 'INFO : Destroy AKS cluster'
+			TerraformRun aks_create destroy
+			;;
+	esac
 }
 
 # Check that k8s cluster exists
