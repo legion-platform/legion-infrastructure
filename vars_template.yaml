@@ -17,7 +17,8 @@ gke_node_tag: str               # GKE cluster node's network tag
 infra_cidr: str                 # Core infrastructure resources CIDR
 pods_cidr: str                  # Cluster PODs CIDR
 service_cidr: str               # Cluster Services CIDR
-cluster_type: str               # Target hosting cloud
+cloud_type: str                 # Target hosting cloud (gcp, azure, aws)
+cluster_type: str               # Legion cloud cluster type (gcp/gke, azure/aks, aws/eks)
 k8s_version: str                # Kubernetes master version
 node_version: str               # Kubernetes node version
 tfstate_bucket: str             # GCS Bucket for cluster TF state
