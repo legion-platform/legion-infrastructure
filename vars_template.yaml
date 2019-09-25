@@ -33,8 +33,8 @@ dns_zone_name: str              # Cloud DNS zone name for the cluster
 ########################################################
 # Common Legion variables
 ########################################################
-legion_helm_repo: str           # Helm repository url with Legion charts
-istio_helm_repo: str            # Helm repository url with Istio charts
+legion_helm_repo: str           # Helm repository url with Legion charts 
+istio_helm_repo: str            # Helm repository url with Istio charts 
 docker_repo: str                # Docker Legion repository url
 cluster_context: str            # K8S cluster context
 legion_infra_version: str       # Legion infrastructure version to be deployed
@@ -89,8 +89,6 @@ test_oauth_scope: str           # OAuth2 client's scope
 # Legion
 ########################################################
 enclave_jwt_secret: str         # JWT secret for legion services
-api_private_key: str            # API private key for Legion services
-api_public_key: str             # API public key for Legion services
 ### Nexus
 model_docker_url: str           # Docker repo URL for models
 docker_user: str                # Docker user for models repo
