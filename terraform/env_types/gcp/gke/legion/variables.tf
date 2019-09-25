@@ -131,3 +131,16 @@ variable "collector_region" {
 variable "mlflow_toolchain_version" {
   description = "Version of legion-mlflow helm chart"
 }
+
+variable "keycloak_realm" {
+  description = "Keycloak realm"
+}
+
+variable "keycloak_url" {
+  description = "Keycloak URL"
+}
+
+variable "model_authorization_enabled" {
+  description = "Is model authorization enabled"
+  default     = "false"
+}

@@ -135,7 +135,11 @@ def runRobotTestsAtGcp(tags="") {
 
                                     sh """
                                         cd /opt/legion
-                                        make CLUSTER_PROFILE=${env.clusterProfile} CLUSTER_NAME=${env.param_cluster_name} prepare-e2e-robot
+                                        make CLUSTER_PROFILE=${env.clusterProfile} \
+                                             CLUSTER_NAME=${env.param_cluster_name} \
+                                             DOCKER_REGISTRY=${env.param_docker_repo} \
+                                             LEGION_VERSION=${env.param_legion_version} setup-e2e-robot
+
                                         echo "Starting robot tests"
                                         make GOOGLE_APPLICATION_CREDENTIALS=${gcpCredential} \
                                             CLUSTER_PROFILE=${env.clusterProfile} \

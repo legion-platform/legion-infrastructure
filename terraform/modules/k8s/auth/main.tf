@@ -37,4 +37,4 @@ resource "helm_release" "oauth2-proxy" {
   values = [
     data.template_file.oauth2-proxy_values.rendered
   ]
-}
+} 
