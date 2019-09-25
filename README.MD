@@ -10,6 +10,7 @@ Prerequisites:
  - GCS Bucket for terraform state with name equal to "<CLUSTER_NAME>-tfstate"
  - SSL certs stored at S3 Bucket (path is configured in vars file)
  - SSH key stored at S3 Bucket (path is configured in vars file)
+ - Reserve Static IP "<CLUSTER_NAME>-nat-gw" and add this IP to Oauth provider (Keycloak for example)
  - cluster_profile.json file with terraform variables (should be specified for each terraform run as a -var-file argument)
 
 In order to setup legion cluster at GCP with provided modules you have to trigger terraform for each of the Legion infrastructure layer.
@@ -34,6 +35,15 @@ CLUSTER_NAME=<CLUSTER_NAME_HERE> TF_DATA_DIR=/tmp/.terraform_${CLUSTER_NAME}_$(b
 -var-file=/PATH/TO/VARIABLES.json \
 -var="agent_cidr=<YOUR_IP_HERE>/32"'
 
+There is also a helper script which allows you to create fully configured Legion cluster with a single command.
+The easiest way to run the script is to use prebuilt docker image containing all required components.
+You should pass cluster_profile.json file with all parameters required for cluster setup (refer to vars_template.yaml for details) and appropriate credentials for cloud operations (e.g GOOGLE_CREDENTIALS, AWS_ACCESS_KEY, etc.).
+Here is the example of command which mounts all dependencies to the docker container and triggers a cluster creation:
+
+docker run -v <local_path_to_cluster_profile.json>:/tmp/cluster_profile.json -v <path_to_local_gcp_credentials_file.json>/:/tmp/gcp_credentials_file.json -v $HOME/.aws:/root/.aws -e PROFILE=/tmp/cluster_profile.json -e GOOGLE_CREDENTIALS=/tmp/gcp_credentials_file.json k8s-terraform:latest tf_runner create
+
+Mandatory parameters are PROFILE and GOOGLE_CREDENTIALS environment variables which point to the mounted files required for cluster provisioning.
+The same way tf_runner script could be executed locally if you have all dependencies available.
 
 ## Cluster profile preparation
 In order to setup Legion cluster with all components you should have cluster profile with all parameters required for platform setup.
@@ -46,3 +56,48 @@ Hiera allows you to store hierarchical data in yaml format and request required 
 For Legion CI/CD purposes we use separate profiles repository (as you may want to do as well) with yaml files describing clusters setup.
 Place private_key.pkcs7.pem and public_key.pkcs7.pem keys to expected location (/etc/puppetlabs/puppet/eyaml/ by default) and trigger hiera_exporter script from hieradata directory with proper arguments.
 This will generate Terraform compatible variables json file which should be used with Terraform modules for clusters setup.
+
+
+## Local development
+
+* Create and fill in the `.env` file. You must override empty values in the Makefile header. 
+For example:
+```text
+CLUSTER_NAME=gke-legion-04
+CLOUD_PROVIDER=gcp
+
+GOOGLE_CREDENTIALS=/home/mcdoker18/epam/legion-aws/targets/secrets/gcp-creds.json
+AWS_SECRET_ACCESS_KEY=blabla
+AWS_ACCESS_KEY_ID=blabla
+
+GKE_PROJECT=test-project-id
+GKE_ZONE=zone-id
+
+LEGION_INFRA_VERSION=1.0
+LEGION_VERSION=1.0
+MLFLOW_TOOLCHAIN_VERSION=1.0
+LEGION_HELM_REPO=https://nexus.ailifecycle.org/repository/helm-main/
+LEGION_DOCKER_REPO=nexus-local.ailifecycle.org:443/legion
+
+MODEL_REFERENCE=origin/develop
+#TF_APPLY_CLI_ARGS=-auto-approve
+
+HIERA_KEYS_DIR=/home/mcdoker18/epam/legion-aws/.hiera_keys
+LEGION_PROFILES_DIR=/home/mcdoker18/epam/legion-profiles
+```
+* Build terraform image
+```bash
+make docker-build-terraform
+```
+* Export a hiera config
+```bash
+make export-hiera
+```
+* Deploy legion
+```bash
+make apply-all
+```
+* Destroy legion
+```bash
+make destroy-all
+```
