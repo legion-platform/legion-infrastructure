@@ -1,8 +1,3 @@
-provider "helm" {
-  version        = "0.10.2"
-  install_tiller = false
-}
-
 resource "kubernetes_namespace" "istio" {
   metadata {
     name = var.istio_namespace

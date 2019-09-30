@@ -22,13 +22,13 @@ RUN wget -qO /usr/local/bin/kubectl "https://storage.googleapis.com/kubernetes-r
     chmod a+x /usr/local/bin/kubectl
 
 # Install Terraform
-ENV TERRAFORM_VERSION=0.12.6
+ENV TERRAFORM_VERSION=0.12.9
 RUN wget -qO /tmp/terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip" && \
     cd /tmp && unzip /tmp/terraform.zip && \
     mv /tmp/terraform /usr/local/bin/terraform && rm -rf /tmp/terraform*
 
 # Install Helm
-ENV HELM_VERSION=v2.14.0
+ENV HELM_VERSION=v2.14.3
 RUN curl -fsSLO https://kubernetes-helm.storage.googleapis.com/helm-${HELM_VERSION}-linux-amd64.tar.gz && \
     mkdir -p /tmp/helm && mv helm-${HELM_VERSION}-linux-amd64.tar.gz /tmp/helm && \
     tar xzf /tmp/helm/helm-${HELM_VERSION}-linux-amd64.tar.gz -C /tmp/helm && \

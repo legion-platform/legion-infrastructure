@@ -1,11 +1,16 @@
 provider "google" {
   version = "2.16.0"
+  region  = var.region
+  zone    = var.zone
+  project = var.project_id
 }
 
 provider "helm" {
   version         = "0.10.2"
   namespace       = "kube-system"
   service_account = "tiller"
+  install_tiller  = false
+  tiller_image    = var.tiller_image
 }
 
 provider "kubernetes" {
@@ -14,10 +19,6 @@ provider "kubernetes" {
   config_context_cluster   = var.config_context_cluster
 }
 
-provider "null" {
-  version = "~> 2.1.2"
-}
-
 provider "template" {
-  version = "~> 2.1.2"
+  version = "~> 2.1"
 }

@@ -1,49 +1,11 @@
-provider "kubernetes" {
-  config_context_auth_info = var.config_context_auth_info
-  config_context_cluster   = var.config_context_cluster
-}
-
-provider "helm" {
-  install_tiller  = true
-  namespace       = "kube-system"
-  service_account = "tiller"
-  tiller_image    = "gcr.io/kubernetes-helm/tiller:v2.11.0"
-}
-
-provider "google" {
-  version = "~> 2.2"
-  region  = var.region
-  zone    = var.zone
-  project = var.project_id
-}
-
-provider "aws" {
-  region                  = var.region_aws
-  shared_credentials_file = var.aws_credentials_file
-  profile                 = var.aws_profile
-}
-
-########################################################
-# TLS keys
-########################################################
-data "aws_s3_bucket_object" "tls-secret-key" {
-  bucket = var.secrets_storage
-  key    = "${var.cluster_name}/tls/${var.cluster_name}.key"
-}
-
-data "aws_s3_bucket_object" "tls-secret-crt" {
-  bucket = var.secrets_storage
-  key    = "${var.cluster_name}/tls/${var.cluster_name}.fullchain.crt"
-}
-
 resource "kubernetes_secret" "tls_legion" {
   metadata {
     name      = "${var.cluster_name}-tls"
     namespace = var.legion_namespace
   }
   data = {
-    "tls.key" = data.aws_s3_bucket_object.tls-secret-key.body
-    "tls.crt" = data.aws_s3_bucket_object.tls-secret-crt.body
+    "tls.key" = var.tls_secret_key
+    "tls.crt" = var.tls_secret_crt
   }
   type = "kubernetes.io/tls"
 
