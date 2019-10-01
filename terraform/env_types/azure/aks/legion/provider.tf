@@ -2,14 +2,6 @@ provider "azurerm" {
   version = "1.33.1"
 }
 
-provider "aws" {
-  version = "2.28.1"
-}
-
-provider "google" {
-  version = "2.15.0"
-}
-
 provider "helm" {
   version         = "0.10.2"
   namespace       = "kube-system"
