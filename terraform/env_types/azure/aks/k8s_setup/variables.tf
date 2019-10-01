@@ -15,20 +15,6 @@ variable "cluster_type" {
   description = "Legion cluster cloud provider type"
 }
 
-variable "project_id" {
-  description = "Target project id"
-}
-
-variable "zone" {
-  default     = "us-east1-b"
-  description = "Default zone"
-}
-
-variable "region" {
-  default     = "us-east1"
-  description = "Region of resources"
-}
-
 variable "config_context_auth_info" {
   default     = ""
   description = "Legion cluster context auth"
@@ -37,24 +23,6 @@ variable "config_context_auth_info" {
 variable "config_context_cluster" {
   default     = ""
   description = "Legion cluster context name"
-}
-
-variable "region_aws" {
-  default     = "us-east-2"
-  description = "Region of AWS resources"
-}
-
-variable "aws_profile" {
-  description = "AWS profile name"
-}
-
-variable "aws_credentials_file" {
-  default     = "~/.aws/config"
-  description = "AWS credentials file location"
-}
-
-variable "secrets_storage" {
-  description = "Cluster secrets storage"
 }
 
 variable "cluster_name" {
@@ -76,6 +44,14 @@ variable "root_domain" {
 
 variable "docker_repo" {
   description = "Legion Docker repo url"
+}
+
+variable "tls_key" {
+  description = "TLS key for Legion cluster"
+}
+
+variable "tls_crt" {
+  description = "TLS certificate for Legion cluster"
 }
 
 ########################
@@ -146,4 +122,3 @@ variable "istio_namespace" {
   default     = "istio-system"
   description = "istio namespace"
 }
-

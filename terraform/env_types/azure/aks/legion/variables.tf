@@ -4,10 +4,6 @@ variable "azure_resource_group" {
   default     = "legion-rg"
 }
 
-variable "secrets_storage" {
-  description = "Cluster secrets storage"
-}
-
 ##################
 # Common
 ##################
@@ -26,6 +22,14 @@ variable "root_domain" {
 
 variable "tiller_image" {
   default = "gcr.io/kubernetes-helm/tiller:v2.14.0"
+}
+
+variable "tls_key" {
+  description = "TLS key for Legion cluster"
+}
+
+variable "tls_crt" {
+  description = "TLS certificate for Legion cluster"
 }
 
 ##################

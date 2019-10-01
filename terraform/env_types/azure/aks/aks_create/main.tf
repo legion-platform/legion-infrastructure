@@ -63,7 +63,7 @@ module "aks_cluster" {
   sp_secret                  = var.sp_secret
   k8s_version                = var.k8s_version
   ssh_user                   = "ubuntu"
-  ssh_public_key             = data.aws_s3_bucket_object.ssh_public_key.body
+  ssh_public_key             = var.ssh_key
   node_pools                 = var.node_pools
   aks_analytics_workspace_id = module.azure_monitoring.workspace_id
 }
@@ -80,7 +80,7 @@ resource "null_resource" "bastion_kubeconfig" {
 
   provisioner "remote-exec" {
     inline = [
-      "printf \"${data.aws_s3_bucket_object.ssh_public_key.body}\" >> ~/.ssh/authorized_keys",
+      "printf \"${var.ssh_key}\" >> ~/.ssh/authorized_keys",
       "sudo wget -qO /usr/local/bin/kubectl \"https://storage.googleapis.com/kubernetes-release/release/v${var.k8s_version}/bin/linux/amd64/kubectl\"",
       "sudo chmod +x /usr/local/bin/kubectl",
       "mkdir -p ~/.kube && printf \"${module.aks_cluster.kube_config}\" > ~/.kube/config"

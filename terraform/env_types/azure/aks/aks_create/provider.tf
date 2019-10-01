@@ -2,10 +2,6 @@ provider "azurerm" {
   version = "1.33.1"
 }
 
-provider "aws" {
-  version = "2.28.1"
-}
-
 provider "random" {
   version = "~> 2.2.0"
 }

@@ -1,31 +1,25 @@
 ############################################################################################################
 
 variable "azure_location" {
-  description = "Azure location in which the resource group will be created"
   default     = "eastus"
+  description = "Azure location in which the resource group will be created"
 }
 
 variable "azure_resource_group" {
-  description = "Azure base resource group name"
   default     = "legion-rg"
-}
-
-############################################################################################################
-
-variable "secrets_storage" {
-  description = "Name of S3 bucket with TLS artifacts"
+  description = "Azure base resource group name"
 }
 
 ############################################################################################################
 
 variable "aks_analytics_workspace_id" {
-  description = "Azure Log Analytics workspace ID"
   default     = "my-test-default-variable-eica0Chi"
+  description = "Azure Log Analytics workspace ID"
 }
 
 variable "cluster_name" {
-  description = "Legion k8s cluster name"
   default     = "legion"
+  description = "Legion k8s cluster name"
 }
 
 variable "aks_common_tags" {
@@ -42,18 +36,18 @@ variable "aks_public_ip_name" {
 }
 
 variable "aks_dns_prefix" {
+  default     = ""
   description = "DNS prefix for Kubernetes cluster"
-  default     = "k8stest"
 }
 
 variable "aks_cidr" {
-  description = "Overall VPC address space for all subnets in it"
   default     = "10.255.255.0/24"
+  description = "Overall VPC address space for all subnets in it"
 }
 
 variable "k8s_version" {
-  description = "Kubernetes master version"
   default     = "1.13.10"
+  description = "Kubernetes master version"
 }
 
 variable "allowed_ips" {
@@ -61,13 +55,17 @@ variable "allowed_ips" {
 }
 
 # Next two variables are ID and secret of Service Principal account.
-# These should be defined as TF_VAR_sp_ckuent_id and TF_VAR_sp_secret environment variables
+# These should be defined as TF_VAR_sp_client_id and TF_VAR_sp_secret environment variables
 variable "sp_client_id" {
   description = "Service Principal account ID"
 }
 
 variable "sp_secret" {
   description = "Service Principal account secret"
+}
+
+variable "ssh_key" {
+  description = "SSH public key for Legion cluster nodes and bastion host"
 }
 
 ################

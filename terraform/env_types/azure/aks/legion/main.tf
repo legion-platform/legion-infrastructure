@@ -8,12 +8,6 @@ locals {
   config_context_cluster   = var.cluster_name
 }
 
-module "get_tls" {
-  source          = "../../../../modules/tls"
-  secrets_storage = var.secrets_storage
-  cluster_name    = var.cluster_name
-}
-
 ########################################################
 # Legion setup
 ########################################################
@@ -22,8 +16,8 @@ module "get_tls" {
 #   cluster_name             = var.cluster_name
 #   config_context_auth_info = local.config_context_auth_info
 #   config_context_cluster   = local.config_context_cluster
-#   tls_key                  = module.get_tls.tls_secret_key
-#   tls_crt                  = module.get_tls.tls_secret_crt
+#   tls_secret_key           = var.tls_key
+#   tls_secret_crt           = var.tls_crt
 #   zone                     = var.zone
 #   region                   = var.region
 #   project_id               = var.project_id
