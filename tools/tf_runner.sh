@@ -12,7 +12,7 @@ function ReadArguments() {
 		exit 1
 	fi
 
-	while [[ $# > 0 ]];	do
+	while [[ $# -gt 0 ]]; do
 		case "$1" in
 			-h|--help)
 				echo "tf_runner.sh - Run Terraform modules for Legion clusters orchestration."
@@ -79,7 +79,7 @@ function IngressTFCrutch() {
 	-name "main.tf" -o \
 	-name "versions.tf" -o \
 	-name "variables.tf" -o \
-	-name "$(echo $(GetParam 'cluster_type') | awk -F\/ '{print $1}').tf" \)); do
+	-name "$(GetParam 'cluster_type' | awk -F\/ '{print $1}').tf" \)); do
 		# Rename extra provider tf files :/
 		mv "$file" "$file.bak"
 	done
