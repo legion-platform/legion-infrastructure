@@ -3,16 +3,7 @@ locals {
     { "cluster" = var.cluster_name },
     var.aks_common_tags
   )
-}
-
-########################################################
-# Retrieve SSH key from secrets_storage
-# TODO: move to separate module
-########################################################
-
-data "aws_s3_bucket_object" "ssh_public_key" {
-  bucket = var.secrets_storage
-  key    = "${var.cluster_name}/ssh/${var.cluster_name}.pub"
+  aks_dns_prefix = var.aks_dns_prefix == "" ? var.cluster_name : var.aks_dns_prefix
 }
 
 data "azurerm_public_ip" "aks_ext" {
@@ -56,7 +47,7 @@ module "aks_cluster" {
   aks_tags                   = local.common_tags
   location                   = var.azure_location
   resource_group             = var.azure_resource_group
-  aks_dns_prefix             = var.aks_dns_prefix
+  aks_dns_prefix             = local.aks_dns_prefix
   aks_subnet_id              = module.aks_networking.subnet_id
   allowed_ips                = var.allowed_ips
   sp_client_id               = var.sp_client_id
