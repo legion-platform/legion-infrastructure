@@ -15,14 +15,13 @@ $ export TF_VAR_sp_secret=${ARM_CLIENT_SECRET}
 $ az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
 ```
 
-- Turn on all necessary Azure Preview functions:
+- Turn on all necessary Azure Preview functions ([VMSS](https://docs.microsoft.com/en-us/azure/aks/cluster-autoscaler), [multiple AKS node pools](https://docs.microsoft.com/en-us/azure/aks/use-multiple-node-pools), [AKS availability zones](https://docs.microsoft.com/en-us/azure/aks/availability-zones), [secure access to the AKS API](https://docs.microsoft.com/en-us/Azure/aks/api-server-authorized-ip-ranges)):
 ```bash
 $ az extension add --name aks-preview
-$ az feature register --namespace Microsoft.ContainerService -n EnableSingleIPPerCCP
-$ az feature register --namespace Microsoft.ContainerService -n APIServerSecurityPreview
-$ az feature register --namespace Microsoft.ContainerService -n MultiAgentpoolPreview
 $ az feature register --namespace Microsoft.ContainerService -n VMSSPreview
+$ az feature register --namespace Microsoft.ContainerService -n MultiAgentpoolPreview
 $ az feature register --namespace Microsoft.ContainerService -n AvailabilityZonePreview
+$ az feature register --namespace Microsoft.ContainerService -n APIServerSecurityPreview
 $ az provider register -n Microsoft.ContainerService
 ```
 
