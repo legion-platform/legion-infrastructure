@@ -37,10 +37,11 @@ resource "azurerm_virtual_network" "vpc" {
 ########################################################
 
 resource "azurerm_subnet" "subnet" {
-  name                 = "${var.cluster_name}-subnet"
-  resource_group_name  = var.resource_group
-  virtual_network_name = azurerm_virtual_network.vpc.name
-  address_prefix       = var.subnet_cidr
+  name                      = "${var.cluster_name}-subnet"
+  resource_group_name       = var.resource_group
+  virtual_network_name      = azurerm_virtual_network.vpc.name
+  address_prefix            = var.subnet_cidr
+  network_security_group_id = azurerm_network_security_group.aks_nsg.id
 }
 
 resource "azurerm_network_security_group" "aks_nsg" {
