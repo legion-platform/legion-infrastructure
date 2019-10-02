@@ -75,6 +75,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
     enabled = true
   }
 
+  api_server_authorized_ip_ranges = []
+
   network_profile {
     network_plugin = "azure"
     network_policy = "calico"
