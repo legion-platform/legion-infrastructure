@@ -40,7 +40,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
       os_disk_size_gb = lookup(agent_pool_profile.value.node_config, "disk_size_gb", "30")
       vnet_subnet_id  = var.aks_subnet_id
 
-      # In AKS there's no option to create node pool with 0 nodes
+      # In AKS there's no option to create node pool with 0 nodes, minimum is 1
       count     = lookup(agent_pool_profile.value, "initial_node_count", "1")
       min_count = lookup(lookup(agent_pool_profile.value, "autoscaling", {}), "min_node_count", "1")
       max_count = lookup(lookup(agent_pool_profile.value, "autoscaling", {}), "max_node_count", "2")
@@ -65,6 +65,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
     oms_agent {
       enabled                    = true
       log_analytics_workspace_id = var.aks_analytics_workspace_id
+    }
+    kube_dashboard {
+      enabled = false
     }
   }
 

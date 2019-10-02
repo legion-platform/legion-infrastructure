@@ -26,20 +26,18 @@ module "base_setup" {
 module "nginx-ingress" {
   source                = "../../../../modules/k8s/nginx-ingress"
   cluster_type          = var.cluster_type
+  allowed_ips           = var.allowed_ips
   aks_ingress_ip        = data.azurerm_public_ip.aks_ext.ip_address
   aks_ip_resource_group = var.azure_resource_group
 }
 
-# TBD:
-# We need to make a deployment taking into account the fact that AKS installs the dashboard as add-on
-#
-# module "dashboard" {
-#   source         = "../../../../modules/k8s/dashboard"
-#   cluster_name   = var.cluster_name
-#   root_domain    = var.root_domain
-#   tls_secret_key = var.tls_key
-#   tls_secret_crt = var.tls_crt
-# }
+module "dashboard" {
+  source         = "../../../../modules/k8s/dashboard"
+  cluster_name   = var.cluster_name
+  root_domain    = var.root_domain
+  tls_secret_key = var.tls_key
+  tls_secret_crt = var.tls_crt
+}
 
 module "auth" {
   source                = "../../../../modules/k8s/auth"
