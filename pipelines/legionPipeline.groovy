@@ -1,5 +1,5 @@
 def buildDescription(){
-    if (env.param_cluster_name) {
+   if (env.param_cluster_name) {
         currentBuild.description = "${env.param_cluster_name} ${env.param_git_branch}"
     } else {
         currentBuild.description = "${env.param_profile} ${env.param_git_branch}"
@@ -35,10 +35,10 @@ def createCluster(cloudCredsSecret, dockerArgPrefix) {
                         stage('Create cluster specific private DNS zone') {
                             if (env.param_cloud_provider == 'gcp') {
                                 // Run terraform DNS state to establish DNS peering between Jenkins agent and target cluster
-                                def root_domain = sh(script: "jq -r '.root_domain' ${env.clusterProfile}", returnStdout: true).trim()
-                                def tfExtraVars = "-var=\"zone_type=FORWARDING\" \
-                                                  -var=\"zone_name=${env.param_cluster_name}.${root_domain}\" \
-                                                  -var=\"networks_to_add=[\\\"infra-vpc\\\"]\""
+                                root_domain = sh(script: "jq -r '.root_domain' ${env.clusterProfile}", returnStdout: true).trim()
+                                tfExtraVars = "-var=\"zone_type=FORWARDING\" \
+                                    -var=\"zone_name=${env.param_cluster_name}.${root_domain}\" \
+                                    -var=\"networks_to_add=[\\\"infra-vpc\\\"]\""
                                 terraformRun("apply", "cluster_dns", "${tfExtraVars}", "${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns", "bucket=${env.param_cluster_name}-tfstate")
                             }
                         }
@@ -76,9 +76,9 @@ def destroyCluster(cloudCredsSecret, dockerArgPrefix) {
                         }
                         stage('Destroy cluster specific private DNS zone') {
                             if (env.param_cloud_provider == 'gcp') {
-                                def root_domain = sh(script: "jq -r '.root_domain' ${env.clusterProfile}", returnStdout: true).trim()
-                                def tfExtraVars = "-var=\"zone_type=FORWARDING\" \
-                                                   -var=\"zone_name=${env.param_cluster_name}.${root_domain}\""
+                                root_domain = sh(script: "jq -r '.root_domain' ${env.clusterProfile}", returnStdout: true).trim()
+                                tfExtraVars = "-var=\"zone_type=FORWARDING\" \
+                                    -var=\"zone_name=${env.param_cluster_name}.${root_domain}\""
                                 terraformRun("destroy", "cluster_dns", "${tfExtraVars}", "${WORKSPACE}/legion-cicd/terraform/env_types/cluster_dns", "bucket=${env.param_cluster_name}-tfstate")
                             }
                         }
