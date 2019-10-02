@@ -132,7 +132,7 @@ function SetupCloudAccess() {
 			gcloud auth activate-service-account --key-file=$GOOGLE_CREDENTIALS --project=$(GetParam 'project_id')
 			;;
 		"azure/aks")
-			#if [[ $VERBOSE == true ]]; then set +x; fi
+			if [[ $VERBOSE == true ]]; then set +x; fi
 			if [[ -z $ARM_CLIENT_ID || -z $ARM_CLIENT_SECRET || -z $ARM_TENANT_ID || -z $ARM_SUBSCRIPTION_ID ]]; then
 				echo -e "ERROR:\tNo Azure Cloud credentials provided!"
 				echo -e "\tDeclare ARM_CLIENT_ID, ARM_CLIENT_SECRET, ARM_TENANT_ID, ARM_SUBSCRIPTION_ID env vars!"
@@ -141,7 +141,7 @@ function SetupCloudAccess() {
 			az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
 			export TF_VAR_sp_client_id=${ARM_CLIENT_ID}
 			export TF_VAR_sp_secret=${ARM_CLIENT_SECRET}
-			#if [[ $VERBOSE == true ]]; then set -x; fi
+			if [[ $VERBOSE == true ]]; then set -x; fi
 			;;
 		*)
 			echo "ERROR: 'cluster_type' is not defined or has wrong value"
@@ -153,7 +153,6 @@ function SetupCloudAccess() {
 # Create Legion cluster
 function TerraformCreate() {
 	echo 'INFO : Applying k8s create TF module'
-	printenv | egrep 'AWS|GOOGLE|ARM|PROF|TF_' | awk -F= '{print $1"=\x27"$2"\x27"}'
 	case $(GetParam "cluster_type") in
 		"aws/eks")
 			TerraformRun eks_create apply
