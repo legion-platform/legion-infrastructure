@@ -97,43 +97,44 @@ variable "node_pools" {
       max_pods           = "64"
       autoscaling = {
         min_node_count   = "1"
-        max_node_count   = "5"
+        max_node_count   = "6"
       }
       node_config = {
         machine_type     = "Standard_B2s"
       }
-    },
-    {
-      name               = "training"
-      max_pods           = "128"
-      autoscaling = {
-        min_node_count   = "1"
-        max_node_count   = "2"
-      }
-      node_config = {
-        machine_type     = "Standard_B8ms"
-        disk_size_gb     = "100"
-        labels = {
-          mode           = "legion-training"
-        }
-        taint = [{
-          key    = "dedicated"
-          value  = "training"
-          effect = "NoSchedule"
-        }]
-      }
-    },
-    {
-      # Pool name must start with a lowercase letter, have max length of 12, and only have characters a-z0-9
-      name     = "traininggpu"
-      max_pods = "128"
-      node_config = {
-        machine_type = "Standard_NC6_Promo" # East US, South Central US, North Central US, North Europe, UK South
-        disk_size_gb = "100"
-        labels = {
-          "mode" = "legion-training-gpu"
-        }
-      }
     }
+    #,
+    # {
+    #   name               = "training"
+    #   max_pods           = "128"
+    #   autoscaling = {
+    #     min_node_count   = "1"
+    #     max_node_count   = "2"
+    #   }
+    #   node_config = {
+    #     machine_type     = "Standard_B8ms"
+    #     disk_size_gb     = "100"
+    #     labels = {
+    #       mode           = "legion-training"
+    #     }
+    #     taint = [{
+    #       key    = "dedicated"
+    #       value  = "training"
+    #       effect = "NoSchedule"
+    #     }]
+    #   }
+    # },
+    # {
+    #   # Pool name must start with a lowercase letter, have max length of 12, and only have characters a-z0-9
+    #   name     = "traininggpu"
+    #   max_pods = "128"
+    #   node_config = {
+    #     machine_type = "Standard_NC6_Promo" # East US, South Central US, North Central US, North Europe, UK South
+    #     disk_size_gb = "100"
+    #     labels = {
+    #       "mode" = "legion-training-gpu"
+    #     }
+    #   }
+    # }
   ]
 }
