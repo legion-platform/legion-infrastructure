@@ -70,15 +70,14 @@ def hiera_get(config, key_name, env, cloud):
     Read hiera data
     """
 
-    hiera_command = [HIERA_BINARY, '-a', '-f', 'json', '--config', config, key_name, "environment={}".format(env),
+    hiera_command = [HIERA_BINARY, '-f', 'json', '--config', config, key_name, "environment={}".format(env),
                      "cloud={}".format(cloud)]
     log.debug(hiera_command)
 
     try:
         output = ast.literal_eval(subprocess.check_output(hiera_command, encoding="utf-8"))
         log.debug(output)
-        result = output[0].strip('[]') if len(output) < 2 else output
-        return result
+        return output
     except Exception:
         log.warning('Key {} is missing in hieradata'.format(key_name))
         return None
