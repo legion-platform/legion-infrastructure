@@ -79,12 +79,3 @@ module "istio" {
   tls_secret_key       = var.tls_key
   tls_secret_crt       = var.tls_crt
 }
-
-# TBD:
-# Make appropriate analogue of GKE Service Account Assigner mechanism for AKS
-#
-# module "gke-saa" {
-#   source                    = "../../../../modules/k8s/gke-saa"
-#   legion_helm_repo          = var.legion_helm_repo
-#   legion_infra_version      = var.legion_infra_version
-# }

@@ -25,9 +25,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
     }
   }
 
-  # The IP ranges to whitelist for incoming traffic to the k8s master
-  # api_server_authorized_ip_ranges = var.allowed_ips
-
   dynamic "agent_pool_profile" {
     for_each = var.node_pools
     content {
@@ -75,16 +72,12 @@ resource "azurerm_kubernetes_cluster" "aks" {
     enabled = true
   }
 
+  # The IP ranges to whitelist for incoming traffic to the k8s master
   api_server_authorized_ip_ranges = []
 
   network_profile {
     network_plugin = "azure"
     network_policy = "calico"
-    #pod_cidr: ""
-    #service_cidr: "10.0.0.0/16"
-    #dns_service_ip: "10.0.0.10"
-    #docker_bridge_cidr: "172.17.0.1/16"
-    #load_balancer_sku: "basic"
   }
 
   tags = var.aks_tags
