@@ -13,7 +13,7 @@ variable "cluster_name" {
 }
 
 variable "tiller_image" {
-  default = "gcr.io/kubernetes-helm/tiller:v2.14.0"
+  default = "gcr.io/kubernetes-helm/tiller:v2.14.3"
 }
 
 variable "legion_helm_repo" {
