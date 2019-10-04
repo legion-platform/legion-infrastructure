@@ -14,10 +14,19 @@ security:
 feedback:
   enabled: true
   output:
-    target: gcs
+    %{ if cloud_type == "aws" }
+    target: "s3"
+    s3:
+      bucket: "${legion_data_bucket}"
+      region: "${legion_data_bucket_region}"
+      customIAMRole: "${legion_collector_iam_role}"
+    %{ endif }
+    %{ if cloud_type == "gcp" }
+    target: "gcs"
     gcs:
       bucket: "${legion_data_bucket}"
       customSA: "${legion_collector_sa}"
+    %{ endif }
 
 edi:
   replicas: 2
@@ -48,7 +57,10 @@ connections:
 
   - id: models-output
     spec:
-      type: gcs
+      %{ if cloud_type == "gcp" }type: gcs%{ endif }
+      %{ if cloud_type == "aws" }
+      type: s3
+      %{ endif }
       uri: "${model_output_bucket}"
       region: "${model_output_region}"
       keySecret: |

@@ -2,8 +2,13 @@
 # Common
 ##################
 variable "project_id" {
+  default = ""
   description = "Target project id"
 }
+
+variable "cluster_type" {}
+
+variable "cloud_type" {}
 
 variable "cluster_name" {
   default     = "legion"
@@ -12,6 +17,16 @@ variable "cluster_name" {
 
 variable "region" {
   default     = "us-east1"
+  description = "Region of resources"
+}
+
+variable "aws_region" {
+  default     = "eu-central-1"
+  description = "Region of resources"
+}
+
+variable "aws_profile" {
+  default     = "eu-central-1"
   description = "Region of resources"
 }
 
@@ -113,6 +128,11 @@ variable "legion_data_bucket" {
   description = "Legion data storage bucket"
 }
 
+variable "legion_data_bucket_region" {
+  default     = ""
+  description = "Legion data storage bucket"
+}
+
 variable "collector_region" {
   description = "Collector's storage bucket region"
 }
@@ -135,3 +155,20 @@ variable "model_oidc_issuer" {
   description = "The Issuer Identifier"
   default     = ""
 }
+
+variable "model_docker_user" {}
+variable "model_docker_password" {}
+variable "model_docker_repo" {}
+variable "model_docker_web_ui_link" {}
+
+variable "dockercfg" {}
+
+variable "model_output_bucket" {}
+variable "model_output_region" {}
+variable "model_output_secret" {}
+variable "model_output_web_ui_link" {}
+variable "legion_collector_iam_role" { default = "" }
+variable "legion_collector_sa" { default = "" }
+variable "bucket_registry_name" {}
+
+variable "feedback_storage_link" {}
