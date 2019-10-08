@@ -25,6 +25,10 @@ variable "dns_zone_name" {
   description = "Cluster root DNS zone name"
 }
 
+variable "enable_dns_management" {
+  default = 0
+}
+
 ##################
 # GCP
 ##################

@@ -12,5 +12,14 @@ variable "region" {
 }
 
 variable "subnet_cidr" {
+  default = ""
   description = "Subnet range"
+}
+
+variable "subnet_name" {
+  default = ""
+}
+
+variable "vpc_name" {
+  default = ""
 }

@@ -7,7 +7,7 @@ resource "google_compute_address" "ingress_lb_address" {
 }
 
 resource "google_dns_record_set" "ingress_lb" {
-  count        = local.gcp_resource_count
+  count        = (local.gcp_resource_count == 1 && var.enable_dns_management == 1) ? 1 : 0
   project      = var.project_id
   name         = "*.${var.cluster_name}.${var.root_domain}."
   type         = "A"

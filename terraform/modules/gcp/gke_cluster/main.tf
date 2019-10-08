@@ -231,6 +231,7 @@ resource "google_compute_instance" "gke_bastion" {
 ########################################################
 
 resource "google_dns_record_set" "gke_bastion" {
+  count        = var.enable_dns_management
   project      = var.project_id
   name         = "bastion.${var.cluster_name}.${var.root_domain}."
   type         = "A"
@@ -240,6 +241,7 @@ resource "google_dns_record_set" "gke_bastion" {
 }
 
 resource "google_dns_record_set" "gke_api" {
+  count        = var.enable_dns_management
   project      = var.project_id
   name         = "api.${var.cluster_name}.${var.root_domain}."
   type         = "A"

@@ -15,6 +15,10 @@ variable "region" {
   description = "Region of resources"
 }
 
+variable "enable_dns_management" {
+  default = 0
+}
+
 variable "config_context_auth_info" {
   description = "Legion cluster context auth"
 }

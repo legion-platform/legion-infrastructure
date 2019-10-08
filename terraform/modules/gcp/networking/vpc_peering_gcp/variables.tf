@@ -20,3 +20,8 @@ variable "gcp_network_2_range" {
   description = "VPC Network 2 range to allow"
 }
 
+variable "infra_vpc_peering" {
+  default     = 0
+  description = ""
+}
+

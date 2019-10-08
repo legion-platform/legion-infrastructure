@@ -2,30 +2,31 @@
 # K8S setup
 ########################################################
 module "base_setup" {
-  source               = "../../../../modules/k8s/base_setup"
-  cluster_name         = var.cluster_name
-  tls_secret_key       = var.tls_key
-  tls_secret_crt       = var.tls_crt
+  source         = "../../../../modules/k8s/base_setup"
+  cluster_name   = var.cluster_name
+  tls_secret_key = var.tls_key
+  tls_secret_crt = var.tls_crt
 }
 
 module "nginx-ingress" {
-  source        = "../../../../modules/k8s/nginx-ingress"
-  region        = var.region
-  project_id    = var.project_id
-  cluster_name  = var.cluster_name
-  cluster_type  = var.cluster_type
-  allowed_ips   = var.allowed_ips
-  root_domain   = var.root_domain
-  dns_zone_name = var.dns_zone_name
-  network_name  = var.network_name
+  source                = "../../../../modules/k8s/nginx-ingress"
+  region                = var.region
+  project_id            = var.project_id
+  cluster_name          = var.cluster_name
+  cluster_type          = var.cluster_type
+  enable_dns_management = tonumber(var.enable_dns_management)
+  allowed_ips           = var.allowed_ips
+  root_domain           = var.root_domain
+  dns_zone_name         = var.dns_zone_name
+  network_name          = var.network_name
 }
 
 module "dashboard" {
-  source               = "../../../../modules/k8s/dashboard"
-  cluster_name         = var.cluster_name
-  root_domain          = var.root_domain
-  tls_secret_key       = var.tls_key
-  tls_secret_crt       = var.tls_crt
+  source         = "../../../../modules/k8s/dashboard"
+  cluster_name   = var.cluster_name
+  root_domain    = var.root_domain
+  tls_secret_key = var.tls_key
+  tls_secret_crt = var.tls_crt
 }
 
 module "auth" {

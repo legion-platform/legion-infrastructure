@@ -18,6 +18,10 @@ variable "root_domain" {
   description = "Legion cluster root domain"
 }
 
+variable "enable_dns_management" {
+  default = 0
+}
+
 ################
 # GKE variables
 ################

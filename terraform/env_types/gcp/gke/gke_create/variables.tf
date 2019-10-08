@@ -25,6 +25,16 @@ variable "infra_vpc_name" {
   description = "Region of resources"
 }
 
+variable "infra_vpc_peering" {
+  default     = 0
+  description = ""
+}
+
+variable "enable_dns_management" {
+  default     = 0
+  description = ""
+}
+
 variable "infra_cidr" {
   default     = ""
   description = "GCP infra network CIDR"
