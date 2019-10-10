@@ -15,3 +15,15 @@ provider "kubernetes" {
   config_context_auth_info = local.config_context_auth_info
   config_context_cluster   = local.config_context_cluster
 }
+
+provider "local" {
+  version = "~> 1.4"
+}
+
+provider "template" {
+  version = "~> 2.1"
+}
+
+provider "random" {
+  version = "~> 2.2"
+}
