@@ -93,14 +93,17 @@ variable "node_pools" {
   default = [
     {
       name               = "main"
-      initial_node_count = "4"
+      initial_node_count = "2"
       max_pods           = "64"
+
       autoscaling = {
-        min_node_count   = "1"
-        max_node_count   = "6"
+        min_node_count = "1"
+        max_node_count = "4"
       }
+
       node_config = {
-        machine_type     = "Standard_B2s"
+        machine_type = "Standard_B8ms"
+        disk_size_gb = 96
       }
     }
   ]
