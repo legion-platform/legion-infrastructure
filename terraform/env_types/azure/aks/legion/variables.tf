@@ -15,7 +15,6 @@ variable "aks_common_tags" {
   type        = "map"
   default     = {
     environment = "Development"
-    purpose     = "Kubernetes Cluster"
   }
 }
 

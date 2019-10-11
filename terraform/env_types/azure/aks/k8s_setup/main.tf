@@ -11,6 +11,7 @@ data "azurerm_public_ip" "aks_ext" {
 locals {
   config_context_auth_info = var.config_context_auth_info == "" ? data.azurerm_kubernetes_cluster.aks.kube_config.0.username : var.config_context_auth_info
   config_context_cluster   = var.config_context_cluster == "" ? var.cluster_name : var.config_context_cluster
+  docker_repo = "nexus.ailifecycle.org/legion"
 }
 
 ########################################################
@@ -63,7 +64,7 @@ module "monitoring" {
   grafana_admin         = var.grafana_admin
   grafana_pass          = var.grafana_pass
   grafana_storage_class = var.grafana_storage_class
-  docker_repo           = var.docker_repo
+  docker_repo           = local.docker_repo
   monitoring_namespace  = var.monitoring_namespace
   tls_secret_key        = var.tls_key
   tls_secret_crt        = var.tls_crt
@@ -79,9 +80,12 @@ module "istio" {
   tls_secret_key       = var.tls_key
   tls_secret_crt       = var.tls_crt
 }
+<<<<<<< HEAD
 
 module "tekton" {
   source = "../../../../modules/k8s/tekton"
   legion_helm_repo     = var.legion_helm_repo
   legion_infra_version = var.legion_infra_version
 }
+=======
+>>>>>>> [legion-platform/legion#1016] Legion helmchart chart template keySecret fix
