@@ -87,6 +87,8 @@ config:
       - name: "Feedback storage"
         url: "${feedback_storage_link}"
   deployment:
+    toleration: {}
+    node_selector: {}
     edge:
       host: https://edge.${cluster_name}.${root_domain}
     namespace: "${legion_deployment_namespace}"
@@ -99,6 +101,8 @@ config:
         issuer: "${model_oidc_issuer}"
 
   training:
+    toleration: {}
+    node_selector: {}
     namespace: "${legion_training_namespace}"
     output_connection: models-output
     metric_url: "https://mlflow.${cluster_name}.${root_domain}"
@@ -106,6 +110,8 @@ config:
       image: "${docker_repo}/k8s-model-trainer:${legion_version}"
 
   packaging:
+    toleration: {}
+    node_selector: {}
     namespace: "${legion_packaging_namespace}"
     output_connection: models-output
     service_account: legion-model-packager
