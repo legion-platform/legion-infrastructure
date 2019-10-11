@@ -36,14 +36,19 @@ resource "azurerm_container_registry" "legion" {
 }
 
 locals {
-   dockercfg = {
-     "${azurerm_container_registry.legion.login_server}" = {
-       email    = ""
-       username = azurerm_container_registry.legion.admin_username
-       password = azurerm_container_registry.legion.admin_password
-     }
-   }
+  dockercfg = {
+    "${azurerm_container_registry.legion.login_server}" = {
+      email    = ""
+      username = azurerm_container_registry.legion.admin_username
+      password = azurerm_container_registry.legion.admin_password
+    }
+  }
 
+  storage_tags = merge(
+    { "purpose" = "Legion models storage" },
+    var.tags
+  )
+  
   model_docker_user        = azurerm_container_registry.legion.admin_username
   model_docker_password    = azurerm_container_registry.legion.admin_password
   model_docker_repo        = "${azurerm_container_registry.legion.login_server}/${var.cluster_name}"
@@ -70,7 +75,7 @@ resource "azurerm_storage_account" "legion_data" {
   #   virtual_network_subnet_ids = ["${azurerm_subnet.test.id}"]
   # }
 
-  tags = var.tags
+  tags = local.storage_tags
 }
 
 data "azurerm_storage_account_sas" "legion" {
@@ -109,6 +114,6 @@ resource "azurerm_storage_container" "legion_bucket" {
   name                  = var.legion_data_bucket
   storage_account_name  = azurerm_storage_account.legion_data.name
   container_access_type = "private"
-  metadata              = var.tags
+  metadata              = local.storage_tags
   depends_on            = [azurerm_storage_account.legion_data]
 }

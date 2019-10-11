@@ -57,8 +57,12 @@ connections:
     spec:
       type: docker
       uri: "${model_docker_repo}"
+%{ if cloud_type != "azure" ~}
       password: |
         ${model_docker_password}
+%{ else ~}
+      password: "${model_docker_password}"
+%{ endif ~}
       username: "${model_docker_user}"
       description: "${model_docker_description}"
       webUILink: "${model_docker_web_ui_link}"
@@ -68,17 +72,19 @@ connections:
 %{ if cloud_type == "gcp" ~}
       type: gcs
       region: "${model_output_region}"
+      keySecret: |
+        ${model_output_secret}
 %{ endif ~}
 %{ if cloud_type == "aws" ~}
       type: s3
       region: "${model_output_region}"
+      keySecret: "${model_output_secret}"
 %{ endif ~}
 %{ if cloud_type == "azure" ~}
       type: azureblob
+      keySecret: "${model_output_secret}"
 %{ endif ~}
       uri: "${model_output_bucket}"
-      keySecret: |
-        ${model_output_secret}
       description: "${model_output_description}"
       webUILink: "${model_output_web_ui_link}"
 

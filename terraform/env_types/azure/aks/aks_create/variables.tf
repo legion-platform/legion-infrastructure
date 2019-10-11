@@ -1,5 +1,3 @@
-############################################################################################################
-
 variable "azure_location" {
   default     = "eastus"
   description = "Azure location in which the resource group will be created"
@@ -9,8 +7,6 @@ variable "azure_resource_group" {
   default     = "legion-rg"
   description = "Azure base resource group name"
 }
-
-############################################################################################################
 
 variable "aks_analytics_workspace_id" {
   default     = "my-test-default-variable-eica0Chi"
@@ -93,7 +89,7 @@ variable "node_pools" {
   default = [
     {
       name               = "main"
-      initial_node_count = "2"
+      initial_node_count = "3"
       max_pods           = "64"
 
       autoscaling = {
@@ -102,7 +98,7 @@ variable "node_pools" {
       }
 
       node_config = {
-        machine_type = "Standard_B8ms"
+        machine_type = "Standard_B4ms"
         disk_size_gb = 96
       }
     }
