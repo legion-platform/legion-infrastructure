@@ -1,33 +1,48 @@
 ##################
-# Common
+# Cloud-specific
 ##################
-variable "project_id" {
-  default = ""
-  description = "Target project id"
+variable "cluster_type" {
+  description = "gcp/gke, aws/eks, azure/aks"
 }
 
-variable "cluster_type" {}
+variable "cloud_type" {
+  description = "gcp, aws, azure"
+}
 
-variable "cloud_type" {}
-
-variable "cluster_name" {
-  default     = "legion"
-  description = "Legion cluster name"
+variable "project_id" {
+  default = ""
+  description = "Target GCP project id"
 }
 
 variable "region" {
-  default     = "us-east1"
-  description = "Region of resources"
+  default     = ""
+  description = "Region of GCP resources"
 }
 
 variable "aws_region" {
-  default     = "eu-central-1"
-  description = "Region of resources"
+  default     = ""
+  description = "Region of AWS resources"
 }
 
 variable "aws_profile" {
-  default     = "eu-central-1"
-  description = "Region of resources"
+  default     = ""
+  description = "AWS profile name"
+}
+
+variable "legion_collector_iam_role" { default = "" }
+
+variable "legion_collector_sa" { default = "" }
+
+variable "azure_storage_account" { default = "" }
+
+variable "azure_storage_access_key" { default = "" }
+
+##################
+# Common
+##################
+variable "cluster_name" {
+  default     = "legion"
+  description = "Legion cluster name"
 }
 
 variable "legion_helm_repo" {
@@ -130,11 +145,7 @@ variable "legion_data_bucket" {
 
 variable "legion_data_bucket_region" {
   default     = ""
-  description = "Legion data storage bucket"
-}
-
-variable "collector_region" {
-  description = "Collector's storage bucket region"
+  description = "Legion data storage bucket region"
 }
 
 variable "mlflow_toolchain_version" {
@@ -157,18 +168,21 @@ variable "model_oidc_issuer" {
 }
 
 variable "model_docker_user" {}
+
 variable "model_docker_password" {}
+
 variable "model_docker_repo" {}
+
 variable "model_docker_web_ui_link" {}
 
 variable "dockercfg" {}
 
 variable "model_output_bucket" {}
-variable "model_output_region" {}
+
+variable "model_output_region" { default = "" }
+
 variable "model_output_secret" {}
+
 variable "model_output_web_ui_link" {}
-variable "legion_collector_iam_role" { default = "" }
-variable "legion_collector_sa" { default = "" }
-variable "bucket_registry_name" {}
 
 variable "feedback_storage_link" {}

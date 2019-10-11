@@ -98,6 +98,9 @@ data "template_file" "legion_values" {
     legion_collector_sa       = var.legion_collector_sa
     legion_collector_iam_role = var.legion_collector_iam_role
 
+    azure_storage_account    = var.azure_storage_account
+    azure_storage_access_key = var.azure_storage_access_key
+
     model_authorization_enabled = var.model_authorization_enabled
     model_oidc_jwks_url         = var.model_oidc_jwks_url
     model_oidc_issuer           = var.model_oidc_issuer
@@ -114,7 +117,7 @@ data "template_file" "legion_values" {
     model_output_bucket      = var.model_output_bucket
     model_output_region      = var.model_output_region
     model_output_secret      = var.model_output_secret
-    model_output_description = "Storage for trainined artifacts"
+    model_output_description = "Storage for trained artifacts"
     model_output_web_ui_link = var.model_output_web_ui_link
 
     model_docker_user        = var.model_docker_user
@@ -125,11 +128,6 @@ data "template_file" "legion_values" {
 
     feedback_storage_link = var.feedback_storage_link
   }
-}
-
-resource "local_file" "penis" {
-  content = data.template_file.legion_values.rendered
-  filename    = "/tmp/lol.yaml"
 }
 
 resource "helm_release" "legion" {
