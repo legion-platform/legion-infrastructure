@@ -172,6 +172,11 @@ def runRobotTests(tags="", cloudCredsSecret, dockerArgPrefix) {
                                          DOCKER_REGISTRY=${env.param_docker_repo} \
                                          LEGION_VERSION=${env.param_legion_version} setup-e2e-robot
 
+                                    echo "Starting robot tests"
+                                    make CLUSTER_PROFILE=${env.clusterProfile} \
+                                         ROBOT_THREADS=6 \
+                                         ROBOT_OPTIONS="${robot_tags.join(' ')}" \
+                                         LEGION_VERSION=${env.param_legion_version} e2e-robot || true
 
                                     make CLUSTER_PROFILE=${env.clusterProfile} \
                                          CLUSTER_NAME=${env.param_cluster_name} cleanup-e2e-robot
