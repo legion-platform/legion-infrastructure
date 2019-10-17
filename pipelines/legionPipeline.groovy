@@ -27,10 +27,12 @@ def createCluster(cloudCredsSecret, dockerArgPrefix) {
                             updateProfileKey("legion_infra_version", env.param_legion_infra_version)
                             updateProfileKey("legion_version", env.param_legion_version)
                             updateProfileKey("legion_helm_repo", env.param_helm_repo)
-                            updateProfileKey("docker_repo", env.param_docker_repo)
+                            if (env.param_cloud_provider == 'gcp') {
+                                updateProfileKey("docker_repo", env.param_docker_repo)
+                            }
                             updateProfileKey("model_reference", commitID)
 
-                            sh'tf_runner -v create'
+                            sh'tf_runner create'
                         }
                         stage('Create cluster specific private DNS zone') {
                             if (env.param_cloud_provider == 'gcp') {
@@ -70,9 +72,11 @@ def destroyCluster(cloudCredsSecret, dockerArgPrefix) {
                             updateProfileKey("legion_infra_version", env.param_legion_infra_version)
                             updateProfileKey("legion_version", env.param_legion_version)
                             updateProfileKey("legion_helm_repo", env.param_helm_repo)
-                            updateProfileKey("docker_repo", env.param_docker_repo)
+                            if (env.param_cloud_provider == 'gcp') {
+                                updateProfileKey("docker_repo", env.param_docker_repo)
+                            }
 
-                            sh'tf_runner -v destroy'
+                            sh'tf_runner destroy'
                         }
                         stage('Destroy cluster specific private DNS zone') {
                             if (env.param_cloud_provider == 'gcp') {
@@ -84,7 +88,7 @@ def destroyCluster(cloudCredsSecret, dockerArgPrefix) {
                         }
                         stage('Cleanup workspace') {
                             // Cleanup profiles directory
-                            sh"rm -rf ${WORKSPACE}/legion-profiles/ ||true"
+                            sh"rm -rf ${WORKSPACE}/legion-profiles/ || true"
                         }
                     }
                 }

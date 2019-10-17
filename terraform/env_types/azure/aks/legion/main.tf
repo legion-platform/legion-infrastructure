@@ -10,7 +10,6 @@ locals {
     { "cluster" = var.cluster_name },
     var.aks_common_tags
   )
-  docker_repo = "nexus.ailifecycle.org/legion"
 }
 
 ########################################################
