@@ -168,7 +168,8 @@ def runRobotTests(tags="", cloudCredsSecret, dockerArgPrefix) {
 
                                 setupAccess()
 
-                                sh """
+                                sh """#!/bin/bash
+
                                     cd /opt/legion
                                     make CLUSTER_PROFILE=${env.clusterProfile} \
                                          CLUSTER_NAME=${env.param_cluster_name} \
@@ -176,11 +177,17 @@ def runRobotTests(tags="", cloudCredsSecret, dockerArgPrefix) {
                                          DOCKER_REGISTRY=${env.param_docker_repo} \
                                          LEGION_VERSION=${env.param_legion_version} setup-e2e-robot
 
+                                    ROBOT_PARAMS=(CLUSTER_PROFILE=${env.clusterProfile} \
+                                                  ROBOT_THREADS=6 \
+                                                  ROBOT_OPTIONS="${robot_tags.join(' ')}" \
+                                                  LEGION_VERSION=${env.param_legion_version})
+
+                                    if [[ ${env.param_cloud_provider} == gcp ]]; then
+                                        ROBOT_PARAMS+=(GOOGLE_APPLICATION_CREDENTIALS=${cloudCredentials})
+                                    fi
+
                                     echo "Starting robot tests"
-                                    make CLUSTER_PROFILE=${env.clusterProfile} \
-                                         ROBOT_THREADS=6 \
-                                         ROBOT_OPTIONS="${robot_tags.join(' ')}" \
-                                         LEGION_VERSION=${env.param_legion_version} e2e-robot || true
+                                    make "\${ROBOT_PARAMS[@]}" e2e-robot || true
 
                                     make CLUSTER_PROFILE=${env.clusterProfile} \
                                          CLUSTER_NAME=${env.param_cluster_name} cleanup-e2e-robot
