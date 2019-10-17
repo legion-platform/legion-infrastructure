@@ -8,6 +8,32 @@ resource "random_string" "name" {
   special     = false
 }
 
+locals {
+  dockercfg = {
+    "${azurerm_container_registry.legion.login_server}" = {
+      email    = ""
+      username = azurerm_container_registry.legion.admin_username
+      password = azurerm_container_registry.legion.admin_password
+    }
+  }
+
+  storage_tags = merge(
+    { "purpose" = "Legion models storage" },
+    var.tags
+  )
+  registry_tags = merge(
+    { "purpose" = "Legion models images registry" },
+    var.tags
+  )
+
+  model_docker_user        = azurerm_container_registry.legion.admin_username
+  model_docker_password    = azurerm_container_registry.legion.admin_password
+  model_docker_repo        = "${azurerm_container_registry.legion.login_server}/${var.cluster_name}"
+  model_docker_web_ui_link = "https://${local.model_docker_repo}"
+
+  sas_token_period         = "168h" # - 7 days # 8760h - 1 year
+}
+
 ########################################################
 # Azure Container Registry
 ########################################################
@@ -18,7 +44,7 @@ resource "azurerm_container_registry" "legion" {
   sku                      = "Standard"
   admin_enabled            = true
 
-  tags                     = var.tags
+  tags                     = local.registry_tags
 
   # TODO: Add network restrictions (network_rule_set is only supported with the Premium SKU at this time)
   # 
@@ -34,29 +60,6 @@ resource "azurerm_container_registry" "legion" {
   #   }
   # }
 }
-
-locals {
-  dockercfg = {
-    "${azurerm_container_registry.legion.login_server}" = {
-      email    = ""
-      username = azurerm_container_registry.legion.admin_username
-      password = azurerm_container_registry.legion.admin_password
-    }
-  }
-
-  storage_tags = merge(
-    { "purpose" = "Legion models storage" },
-    var.tags
-  )
-  
-  model_docker_user        = azurerm_container_registry.legion.admin_username
-  model_docker_password    = azurerm_container_registry.legion.admin_password
-  model_docker_repo        = "${azurerm_container_registry.legion.login_server}/${var.cluster_name}"
-  model_docker_web_ui_link = "https://${local.model_docker_repo}"
-
-  sas_token_period         = "168h" # - 7 days # 8760h - 1 year
-}
-
 
 ########################################################
 # Azure Blob container

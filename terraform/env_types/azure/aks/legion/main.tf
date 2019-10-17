@@ -26,13 +26,13 @@ module "legion_prereqs" {
 }
 
 module "legion" {
-  source           = "../../../../modules/legion"
-  tls_secret_crt   = var.tls_crt
-  tls_secret_key   = var.tls_key
-  root_domain      = var.root_domain
-  cluster_name     = var.cluster_name
-  cluster_type     = var.cluster_type
-  cloud_type       = var.cloud_type
+  source         = "../../../../modules/legion"
+  tls_secret_crt = var.tls_crt
+  tls_secret_key = var.tls_key
+  root_domain    = var.root_domain
+  cluster_name   = var.cluster_name
+  cluster_type   = var.cluster_type
+  cloud_type     = var.cloud_type
 
   legion_version     = var.legion_version
   legion_helm_repo   = var.legion_helm_repo
@@ -56,7 +56,7 @@ module "legion" {
   docker_user     = var.docker_user
   docker_password = var.docker_password
 
-  feedback_storage_link     = module.legion_prereqs.feedback_storage_link
+  feedback_storage_link = module.legion_prereqs.feedback_storage_link
 
   git_examples_key         = var.git_examples_key
   git_examples_uri         = var.git_examples_uri
