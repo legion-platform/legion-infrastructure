@@ -51,7 +51,7 @@ module "legion" {
   model_output_web_ui_link = module.legion_prereqs.model_output_web_ui_link
 
   dockercfg       = module.legion_prereqs.dockercfg
-  docker_repo     = local.docker_repo
+  docker_repo     = var.docker_repo
   docker_user     = var.docker_user
   docker_password = var.docker_password
 

@@ -100,11 +100,13 @@ def destroyCluster(cloudCredsSecret, dockerArgPrefix) {
 def setupAccess() {
     switch (env.param_cloud_provider) {
         case 'gcp':
+            def gcp_zone = sh(script: "jq -r '.location' ${env.clusterProfile}", returnStdout: true).trim()
+            def gcp_project_id = sh(script: "jq -r '.project_id' ${env.clusterProfile}", returnStdout: true).trim()
             sh """
                 set -ex
         
                 # Authorize GCP access
-                gcloud auth activate-service-account --key-file=${gcpCredential} --project=${gcp_project_id}
+                gcloud auth activate-service-account --key-file=${cloudCredentials} --project=${gcp_project_id}
         
                 # Setup Kube api access
                 gcloud container clusters get-credentials ${env.param_cluster_name} --zone ${gcp_zone}
