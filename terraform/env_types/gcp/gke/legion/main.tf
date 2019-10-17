@@ -28,7 +28,6 @@ module "legion" {
   region               = var.region
   project_id           = var.project_id
   legion_collector_sa  = module.legion_prereqs.legion_collector_sa
-  bucket_registry_name = module.legion_prereqs.bucket_registry_name
 
   model_docker_user        = module.legion_prereqs.model_docker_user
   model_docker_repo        = module.legion_prereqs.model_docker_repo
