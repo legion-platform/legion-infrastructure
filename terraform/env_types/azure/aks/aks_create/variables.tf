@@ -89,12 +89,12 @@ variable "node_pools" {
   default = [
     {
       name               = "main"
-      initial_node_count = "3"
+      initial_node_count = "4"
       max_pods           = "64"
 
       autoscaling = {
         min_node_count = "1"
-        max_node_count = "4"
+        max_node_count = "5"
       }
 
       node_config = {
