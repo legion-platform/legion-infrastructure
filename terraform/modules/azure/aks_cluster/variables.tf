@@ -54,6 +54,14 @@ variable "sp_secret" {
   description = "Service Principal account secret"
 }
 
+variable "public_ip_name" {
+  description = "Name of public IP-address used for AKS cluster"
+}
+
+variable "bastion_ip_name" {
+  description = "Name of public IP-address of AKS cluster bastion host"
+}
+
 variable "allowed_ips" {
   description = "CIDRs to allow access from"
 }

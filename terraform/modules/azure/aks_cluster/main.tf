@@ -2,6 +2,16 @@ resource "random_id" "pool_name" {
   byte_length = 8
 }
 
+data "azurerm_public_ip" "aks_ext" {
+  name                = var.public_ip_name
+  resource_group_name = var.resource_group
+}
+
+data "azurerm_public_ip" "bastion" {
+  name                = var.bastion_ip_name
+  resource_group_name = var.resource_group
+}
+
 ########################################################
 # Deploy AKS cluster
 ########################################################
@@ -73,7 +83,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   # The IP ranges to whitelist for incoming traffic to the k8s master
-  api_server_authorized_ip_ranges = []
+  api_server_authorized_ip_ranges = concat(
+    list("${data.azurerm_public_ip.aks_ext.ip_address}/32"),
+    list("${data.azurerm_public_ip.bastion.ip_address}/32"),
+    var.allowed_ips
+  )
 
   network_profile {
     network_plugin = "azure"
