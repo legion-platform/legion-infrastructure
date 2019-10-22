@@ -37,7 +37,7 @@ variable "legion_helm_repo" {
 }
 
 variable "tiller_image" {
-  default     = "gcr.io/kubernetes-helm/tiller:v2.14.3"
+  default     = "gcr.io/kubernetes-helm/tiller:v2.15.0"
 }
 
 variable "root_domain" {
