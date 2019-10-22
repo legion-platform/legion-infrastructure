@@ -49,9 +49,6 @@ module "aks_cluster" {
   resource_group             = var.azure_resource_group
   aks_dns_prefix             = local.aks_dns_prefix
   aks_subnet_id              = module.aks_networking.subnet_id
-  public_ip_name             = var.aks_public_ip_name
-  bastion_ip_name            = module.aks_networking.bastion_ip_name
-  allowed_ips                = var.allowed_ips
   sp_client_id               = var.sp_client_id
   sp_secret                  = var.sp_secret
   k8s_version                = var.k8s_version

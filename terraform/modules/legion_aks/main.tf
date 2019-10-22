@@ -54,12 +54,29 @@ resource "azurerm_container_registry" "legion" {
   #     action   = 
   #     ip_range = 
   #   }
-  #   virtual_network {
-  #     action    =
-  #     subnet_id = 
-  #   }
   # }
 }
+
+data "azurerm_public_ip" "aks_ext" {
+  name                = var.public_ip_name
+  resource_group_name = var.resource_group
+}
+
+data "azurerm_public_ip" "bastion" {
+  name                = "${var.cluster_name}-bastion"
+  resource_group_name = var.resource_group
+}
+
+  # The IP ranges to whitelist for incoming traffic to the k8s master
+  #api_server_authorized_ip_ranges = []
+  # concat(
+  #   list(var.aks_subnet_cidr),
+  #   list(var.service_cidr),
+  #   list("172.17.0.1/16"),
+  #   list("${data.azurerm_public_ip.aks_ext.ip_address}/32"),
+  #   list("${data.azurerm_public_ip.bastion.ip_address}/32"),
+  #   var.allowed_ips
+  # )
 
 ########################################################
 # Azure Blob container
@@ -71,12 +88,17 @@ resource "azurerm_storage_account" "legion_data" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
 
-  # TODO: Add network restrictions
-  # network_rules {
-  #   default_action             = "Deny"
-  #   ip_rules                   = ["100.0.0.1"]
-  #   virtual_network_subnet_ids = ["${azurerm_subnet.test.id}"]
-  # }
+  network_rules {
+    default_action = "Deny"
+    bypass         = [ "Logging", "Metrics", "AzureServices" ]
+    ip_rules       = concat(
+      # Removing /32 networks masks just in case
+      # https://docs.microsoft.com/en-us/azure/storage/common/storage-network-security#grant-access-from-an-internet-ip-range
+      split(", ", replace(join(", ", var.allowed_ips), "/32", "")),
+      list(data.azurerm_public_ip.aks_ext.ip_address),
+      list(data.azurerm_public_ip.bastion.ip_address)
+    )
+  }
 
   tags = local.storage_tags
 }
