@@ -118,9 +118,7 @@ config:
     toleration: {}
     node_selector: {}
 %{ endif ~}
-%{ if cloud_type == "aws" ~}
     default_docker_pull_conn_name: docker-ci
-%{ endif ~}
     edge:
       host: https://edge.${cluster_name}.${root_domain}
     namespace: "${legion_deployment_namespace}"
