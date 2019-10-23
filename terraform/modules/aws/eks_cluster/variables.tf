@@ -126,7 +126,7 @@ variable "num_nodes_min" {
 }
 
 variable "num_nodes_max" {
-  default     = "5"
+  default     = "7"
   description = "Max number of nodes in cluster"
 }
 
