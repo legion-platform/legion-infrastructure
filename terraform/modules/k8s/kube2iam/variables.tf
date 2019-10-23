@@ -14,5 +14,5 @@ variable "image_tag" {
 }
 
 variable "chart_version" {
-  default = "v0.2.0"
+  default = "2.0.2"
 }
