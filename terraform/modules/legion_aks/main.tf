@@ -32,6 +32,14 @@ locals {
   model_docker_web_ui_link = "https://${local.model_docker_repo}"
 
   sas_token_period         = "168h" # - 7 days # 8760h - 1 year
+
+  allowed_nets             = concat(
+    list(var.aks_subnet_cidr),
+    list(var.service_cidr),
+    list(data.azurerm_public_ip.aks_ext.ip_address),
+    list(data.azurerm_public_ip.bastion.ip_address),
+    split(", ", replace(join(", ", var.allowed_ips), "/32", ""))
+  )
 }
 
 ########################################################
@@ -67,16 +75,16 @@ data "azurerm_public_ip" "bastion" {
   resource_group_name = var.resource_group
 }
 
-  # The IP ranges to whitelist for incoming traffic to the k8s master
-  #api_server_authorized_ip_ranges = []
-  # concat(
-  #   list(var.aks_subnet_cidr),
-  #   list(var.service_cidr),
-  #   list("172.17.0.1/16"),
-  #   list("${data.azurerm_public_ip.aks_ext.ip_address}/32"),
-  #   list("${data.azurerm_public_ip.bastion.ip_address}/32"),
-  #   var.allowed_ips
-  # )
+resource "null_resource" "secure_kube_api" {
+  triggers = {
+    build_number = timestamp()
+  }
+
+  provisioner "local-exec" {
+    command = "az extension add --name aks-preview && az aks update --resource-group ${var.resource_group} --name ${var.cluster_name} --api-server-authorized-ip-ranges ${join(",", local.allowed_nets)}"
+    interpreter = ["timeout", "300", "bash", "-c"]
+  }
+}
 
 ########################################################
 # Azure Blob container
@@ -89,7 +97,7 @@ resource "azurerm_storage_account" "legion_data" {
   account_replication_type = "LRS"
 
   network_rules {
-    default_action = "Deny"
+    default_action = "Allow"
     bypass         = [ "Logging", "Metrics", "AzureServices" ]
     ip_rules       = concat(
       # Removing /32 networks masks just in case
