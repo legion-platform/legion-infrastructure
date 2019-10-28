@@ -84,6 +84,12 @@ resource "null_resource" "secure_kube_api" {
     command = "az extension add --name aks-preview && az aks update --resource-group ${var.resource_group} --name ${var.cluster_name} --api-server-authorized-ip-ranges ${join(",", local.allowed_nets)}"
     interpreter = ["timeout", "300", "bash", "-c"]
   }
+  provisioner "local-exec" {
+    when    = "destroy"
+    command = "az aks update --resource-group ${var.resource_group} --name ${var.cluster_name} --api-server-authorized-ip-ranges \"\""
+    interpreter = ["timeout", "300", "bash", "-c"]
+  }
+
 }
 
 ########################################################
