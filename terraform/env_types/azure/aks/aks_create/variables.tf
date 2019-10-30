@@ -9,7 +9,8 @@ variable "azure_resource_group" {
 }
 
 variable "aks_analytics_deploy" {
-  default     = "false"
+  type        = bool
+  default     = false
   description = "Deploy new Azure Log Analytics workspace or not"
 }
 

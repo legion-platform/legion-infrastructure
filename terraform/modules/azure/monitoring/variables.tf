@@ -1,6 +1,7 @@
 variable "enabled" {
-  default     = "false"
-  description = "(true / false) Deploy new Azure Log Analytics workspace or not"
+  type        = bool
+  default     = false
+  description = "Deploy new Azure Log Analytics workspace or not"
 }
 
 variable "cluster_name" {
