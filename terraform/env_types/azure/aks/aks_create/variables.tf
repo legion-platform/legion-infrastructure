@@ -8,8 +8,13 @@ variable "azure_resource_group" {
   description = "Azure base resource group name"
 }
 
+variable "aks_analytics_deploy" {
+  default     = "false"
+  description = "Deploy new Azure Log Analytics workspace or not"
+}
+
 variable "aks_analytics_workspace_id" {
-  default     = "my-test-default-variable-eica0Chi"
+  default     = ""
   description = "Azure Log Analytics workspace ID"
 }
 
