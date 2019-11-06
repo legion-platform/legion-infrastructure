@@ -75,21 +75,21 @@ data "azurerm_public_ip" "bastion" {
   resource_group_name = var.resource_group
 }
 
-resource "null_resource" "secure_kube_api" {
-  triggers = {
-    build_number = timestamp()
-  }
+# resource "null_resource" "secure_kube_api" {
+#   triggers = {
+#     build_number = timestamp()
+#   }
 
-  provisioner "local-exec" {
-    command = "az extension add --name aks-preview && az aks update --resource-group ${var.resource_group} --name ${var.cluster_name} --api-server-authorized-ip-ranges ${join(",", local.allowed_nets)}"
-    interpreter = ["timeout", "300", "bash", "-c"]
-  }
-  provisioner "local-exec" {
-    when    = "destroy"
-    command = "az extension add --name aks-preview && az aks update --resource-group ${var.resource_group} --name ${var.cluster_name} --api-server-authorized-ip-ranges \"\""
-    interpreter = ["timeout", "300", "bash", "-c"]
-  }
-}
+#   provisioner "local-exec" {
+#     command = "az extension add --name aks-preview && az aks update --resource-group ${var.resource_group} --name ${var.cluster_name} --api-server-authorized-ip-ranges ${join(",", local.allowed_nets)}"
+#     interpreter = ["timeout", "300", "bash", "-c"]
+#   }
+#   provisioner "local-exec" {
+#     when    = "destroy"
+#     command = "az extension add --name aks-preview && az aks update --resource-group ${var.resource_group} --name ${var.cluster_name} --api-server-authorized-ip-ranges \"\""
+#     interpreter = ["timeout", "300", "bash", "-c"]
+#   }
+# }
 
 ########################################################
 # Azure Blob container
@@ -114,7 +114,7 @@ resource "azurerm_storage_account" "legion_data" {
   }
 
   tags       = local.storage_tags
-  depends_on = [null_resource.secure_kube_api]
+  #depends_on = [null_resource.secure_kube_api]
 }
 
 data "azurerm_storage_account_sas" "legion" {
