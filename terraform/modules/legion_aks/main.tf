@@ -53,16 +53,6 @@ resource "azurerm_container_registry" "legion" {
   admin_enabled            = true
 
   tags                     = local.registry_tags
-
-  # TODO: Add network restrictions (network_rule_set is only supported with the Premium SKU at this time)
-  # 
-  # network_rule_set {
-  #   default_action = "Deny"
-  #   ip_rule {
-  #     action   = 
-  #     ip_range = 
-  #   }
-  # }
 }
 
 data "azurerm_public_ip" "aks_ext" {
@@ -74,22 +64,6 @@ data "azurerm_public_ip" "bastion" {
   name                = "${var.cluster_name}-bastion"
   resource_group_name = var.resource_group
 }
-
-# resource "null_resource" "secure_kube_api" {
-#   triggers = {
-#     build_number = timestamp()
-#   }
-
-#   provisioner "local-exec" {
-#     command = "az extension add --name aks-preview && az aks update --resource-group ${var.resource_group} --name ${var.cluster_name} --api-server-authorized-ip-ranges ${join(",", local.allowed_nets)}"
-#     interpreter = ["timeout", "300", "bash", "-c"]
-#   }
-#   provisioner "local-exec" {
-#     when    = "destroy"
-#     command = "az extension add --name aks-preview && az aks update --resource-group ${var.resource_group} --name ${var.cluster_name} --api-server-authorized-ip-ranges \"\""
-#     interpreter = ["timeout", "300", "bash", "-c"]
-#   }
-# }
 
 ########################################################
 # Azure Blob container
@@ -114,7 +88,7 @@ resource "azurerm_storage_account" "legion_data" {
   }
 
   tags       = local.storage_tags
-  #depends_on = [null_resource.secure_kube_api]
+  depends_on = [azurerm_container_registry.legion]
 }
 
 data "azurerm_storage_account_sas" "legion" {
