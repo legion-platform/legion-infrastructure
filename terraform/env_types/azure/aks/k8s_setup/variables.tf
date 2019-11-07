@@ -6,10 +6,6 @@ variable "azure_resource_group" {
   default     = ""
 }
 
-variable "aks_public_ip_name" {
-  description = "Name of public IP-address used for AKS cluster"
-}
-
 variable "cluster_type" {
   default     = "azure/aks"
   description = "Legion cluster cloud provider type"

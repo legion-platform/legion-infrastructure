@@ -31,7 +31,7 @@ module "aks_bastion" {
   location         = var.azure_location
   resource_group   = var.azure_resource_group
   aks_subnet_id    = module.aks_networking.subnet_id
-  public_ip_id     = module.aks_networking.bastion_ip_id
+  bastion_ip_id    = module.aks_networking.bastion_ip_id
   bastion_ssh_user = "ubuntu"
   bastion_tags     = local.common_tags
 }
