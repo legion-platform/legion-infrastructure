@@ -1,10 +1,10 @@
 variable "azure_location" {
-  default     = "eastus"
+  default     = ""
   description = "Azure location in which the resource group will be created"
 }
 
 variable "azure_resource_group" {
-  default     = "legion-rg"
+  default     = ""
   description = "Azure base resource group name"
 }
 

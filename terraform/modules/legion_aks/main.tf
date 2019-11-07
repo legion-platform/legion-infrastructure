@@ -110,8 +110,10 @@ resource "azurerm_storage_account" "legion_data" {
   name                     = random_string.name[1].result
   resource_group_name      = var.resource_group
   location                 = var.location
+  account_kind             = "StorageV2"
   account_tier             = "Standard"
   account_replication_type = "LRS"
+  enable_blob_encryption   = "true"
 
   network_rules {
     default_action = "Allow"

@@ -52,7 +52,7 @@ variable "tls_crt" {
 
 variable "storage_class" {
   default     = "default"
-  description = "Grafana storage class"
+  description = "Kubernetes PVC storage class"
 }
 
 ########################
@@ -64,11 +64,11 @@ variable "allowed_ips" {
 }
 
 variable "alert_slack_url" {
-  description = "Alert slack usrl"
+  description = "Slack alerts url"
 }
 
 variable "grafana_admin" {
-  description = "Grafana admion username"
+  description = "Grafana admin username"
 }
 
 variable "grafana_pass" {

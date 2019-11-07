@@ -82,6 +82,6 @@ module "tekton" {
 }
 
 module "vault" {
-  source = "../../../../modules/k8s/vault"
+  source                  = "../../../../modules/k8s/vault"
   vault_pvc_storage_class = var.storage_class
 }

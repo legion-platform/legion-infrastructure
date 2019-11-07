@@ -29,7 +29,7 @@ $ az provider register -n Microsoft.ContainerService
 ```bash
 $ export CLUSTER_NAME="legion-test"
 $ export RG=${CLUSTER_NAME}
-$ az group create --name $RG --location eastus --tags environment=Testing cluster=$CLUSTER_NAME
+$ az group create --name $RG --location eastus --tags env=Testing cluster=$CLUSTER_NAME
 ```
 
 - Create public IP that will be used as Kubernetes cluster endpoint
@@ -42,13 +42,13 @@ $ az network public-ip create --name $CLUSTER_NAME-egress --resource-group $RG -
 ```bash
 $ export AZURE_STORAGE_ACCOUNT="storage7868768" # Some unique name without dashes, underscores and capitals
 $ az storage account create --resource-group $RG \
-	--name $AZURE_STORAGE_ACCOUNT --sku Standard_LRS --encryption-services blob \
-	--tags environment=Testing cluster=$CLUSTER_NAME purpose="Terraform Backend storage"
+	--name $AZURE_STORAGE_ACCOUNT --sku Standard_LRS --kind StorageV2 --encryption-services blob \
+	--tags env=Testing cluster=$CLUSTER_NAME purpose="Terraform Backend storage"
 ```
 
 - Create storage container (aka blob bucket):
 ```bash
 $ export STORAGE_CONTAINER="tfstates-bucket"
 $ az storage container create --name $STORAGE_CONTAINER --account-name $AZURE_STORAGE_ACCOUNT \
-	--metadata environment=Testing cluster=$CLUSTER_NAME purpose="Terraform Backend storage"
+	--metadata env=Testing cluster=$CLUSTER_NAME purpose="Terraform Backend storage"
 ```
