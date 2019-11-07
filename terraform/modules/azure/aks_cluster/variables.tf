@@ -56,3 +56,7 @@ variable "node_pools" {
   description = "List of k8s node pools map definitions"
   default     = []
 }
+
+variable "egress_ip_name" {
+  description = "Name of public IP-address used for AKS cluster egress"
+}

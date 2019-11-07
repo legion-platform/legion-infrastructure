@@ -8,6 +8,16 @@ resource "random_string" "name" {
   special     = false
 }
 
+data "azurerm_public_ip" "egress" {
+  name                = var.ip_egress_name
+  resource_group_name = var.resource_group
+}
+
+data "azurerm_public_ip" "bastion" {
+  name                = "${var.cluster_name}-bastion"
+  resource_group_name = var.resource_group
+}
+
 locals {
   dockercfg = {
     "${azurerm_container_registry.legion.login_server}" = {
@@ -31,12 +41,12 @@ locals {
   model_docker_repo        = "${azurerm_container_registry.legion.login_server}/${var.cluster_name}"
   model_docker_web_ui_link = "https://${local.model_docker_repo}"
 
-  sas_token_period         = "168h" # - 7 days # 8760h - 1 year
+  sas_token_period = "168h" # - 7 days # 8760h - 1 year
 
-  allowed_nets             = concat(
+  allowed_nets = concat(
     list(var.aks_subnet_cidr),
     list(var.service_cidr),
-    list(data.azurerm_public_ip.aks_ext.ip_address),
+    list(data.azurerm_public_ip.egress.ip_address),
     list(data.azurerm_public_ip.bastion.ip_address),
     split(", ", replace(join(", ", var.allowed_ips), "/32", ""))
   )
@@ -55,14 +65,42 @@ resource "azurerm_container_registry" "legion" {
   tags                     = local.registry_tags
 }
 
-data "azurerm_public_ip" "aks_ext" {
-  name                = var.public_ip_name
-  resource_group_name = var.resource_group
-}
+resource "null_resource" "secure_kube_api" {
+  triggers = {
+    build_number = timestamp()
+  }
 
-data "azurerm_public_ip" "bastion" {
-  name                = "${var.cluster_name}-bastion"
-  resource_group_name = var.resource_group
+  provisioner "local-exec" {
+    interpreter = ["timeout", "300", "bash", "-c"]
+    command = <<EOF
+      if [ -z "$(az extension list | jq -r '.[] | select(.name == "aks-preview")')" ]; then
+        az extension add -n aks-preview -y
+      else
+        az extension update -n aks-preview || true
+      fi
+
+      az aks update \
+        --resource-group ${var.resource_group} \
+        --name ${var.cluster_name} \
+        --api-server-authorized-ip-ranges ${join(",", local.allowed_nets)}
+    EOF
+  }
+  provisioner "local-exec" {
+    when    = "destroy"
+    interpreter = ["timeout", "300", "bash", "-c"]
+    command = <<EOF
+      if [ -z "$(az extension list | jq -r '.[] | select(.name == "aks-preview")')" ]; then
+        az extension add -n aks-preview -y
+      else
+        az extension update -n aks-preview || true
+      fi
+
+      az aks update \
+        --resource-group ${var.resource_group} \
+        --name ${var.cluster_name} \
+        --api-server-authorized-ip-ranges ""
+    EOF
+  }
 }
 
 ########################################################
@@ -82,13 +120,13 @@ resource "azurerm_storage_account" "legion_data" {
       # Removing /32 networks masks just in case
       # https://docs.microsoft.com/en-us/azure/storage/common/storage-network-security#grant-access-from-an-internet-ip-range
       split(", ", replace(join(", ", var.allowed_ips), "/32", "")),
-      list(data.azurerm_public_ip.aks_ext.ip_address),
+      list(data.azurerm_public_ip.egress.ip_address),
       list(data.azurerm_public_ip.bastion.ip_address)
     )
   }
 
   tags       = local.storage_tags
-  depends_on = [azurerm_container_registry.legion]
+  depends_on = [null_resource.secure_kube_api]
 }
 
 data "azurerm_storage_account_sas" "legion" {

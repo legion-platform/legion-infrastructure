@@ -73,8 +73,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   network_profile {
-    network_plugin = "azure"
-    network_policy = "calico"
+    load_balancer_sku = "standard"
+    network_plugin    = "azure"
+    network_policy    = "calico"
   }
 
   tags = var.aks_tags
@@ -83,5 +84,23 @@ resource "azurerm_kubernetes_cluster" "aks" {
     ignore_changes = [
       api_server_authorized_ip_ranges,
     ]
+  }
+
+  # Temporary hack until https://github.com/terraform-providers/terraform-provider-azurerm/issues/4322 is fixed
+  provisioner "local-exec" {
+    interpreter = ["bash", "-c"]
+    command     = <<EOF
+      if [ -z "$(az extension list | jq -r '.[] | select(.name == "aks-preview")')" ]; then
+        az extension add -n aks-preview -y
+      else
+        az extension update -n aks-preview || true
+      fi
+
+      az aks update \
+        --resource-group ${self.resource_group_name} \
+        --name ${self.name} \
+        --load-balancer-outbound-ips \
+        "$(az network public-ip show --resource-group ${self.resource_group_name} --name ${var.egress_ip_name} --query id -o tsv)"
+    EOF
   }
 }

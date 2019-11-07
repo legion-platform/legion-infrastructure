@@ -9,7 +9,7 @@ azure_location: str             # Azure resource group location
 azure_resource_group: str       # Azure resource group name
 azure_storage_account: str      # Azure storage account name
 aks_cidr: str                   # CIDR subnet for AKS cluster nodes
-aks_public_ip_name: str         # Name of Public IP used for AKS ingress/egress
+aks_egress_ip_name: str         # Name of Public IP used for AKS egress
 
 infra_cidr: str                 # Core infrastructure resources CIDR
 pods_cidr: str                  # Cluster PODs CIDR

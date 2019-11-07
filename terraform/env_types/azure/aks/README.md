@@ -34,8 +34,8 @@ $ az group create --name $RG --location eastus --tags environment=Testing cluste
 
 - Create public IP that will be used as Kubernetes cluster endpoint
 ```bash
-$ az network public-ip create --name $CLUSTER_NAME --resource-group $RG --allocation-method Static \
-    --sku Basic --version IPv4 --tags environment=Testing cluster=$CLUSTER_NAME purpose="Kubernetes cluster endpoint"
+$ az network public-ip create --name $CLUSTER_NAME-egress --resource-group $RG --allocation-method Static \
+    --sku Standard --version IPv4 --tags env=Testing cluster=$CLUSTER_NAME purpose="Kubernetes cluster egress"
 ```
 
 - Create storage account in this storage group:

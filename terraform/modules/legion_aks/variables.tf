@@ -25,8 +25,8 @@ variable "allowed_ips" {
   description = "CIDRs to allow access from"
 }
 
-variable "public_ip_name" {
-  description = "Name of public IP-address used for AKS cluster"
+variable "ip_egress_name" {
+  description = "Name of AKS cluster egress public IP-address"
 }
 
 variable "aks_subnet_cidr" {
