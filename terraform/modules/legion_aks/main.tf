@@ -42,14 +42,6 @@ locals {
   model_docker_web_ui_link = "https://${local.model_docker_repo}"
 
   sas_token_period = "168h" # - 7 days # 8760h - 1 year
-
-  allowed_nets = concat(
-    list(var.aks_subnet_cidr),
-    list(var.service_cidr),
-    list(data.azurerm_public_ip.egress.ip_address),
-    list(data.azurerm_public_ip.bastion.ip_address),
-    split(", ", replace(join(", ", var.allowed_ips), "/32", ""))
-  )
 }
 
 ########################################################
@@ -63,44 +55,6 @@ resource "azurerm_container_registry" "legion" {
   admin_enabled            = true
 
   tags                     = local.registry_tags
-}
-
-resource "null_resource" "secure_kube_api" {
-  triggers = {
-    build_number = timestamp()
-  }
-
-  provisioner "local-exec" {
-    interpreter = ["timeout", "300", "bash", "-c"]
-    command = <<EOF
-      if [ -z "$(az extension list | jq -r '.[] | select(.name == "aks-preview")')" ]; then
-        az extension add -n aks-preview -y
-      else
-        az extension update -n aks-preview || true
-      fi
-
-      az aks update \
-        --resource-group ${var.resource_group} \
-        --name ${var.cluster_name} \
-        --api-server-authorized-ip-ranges ${join(",", local.allowed_nets)}
-    EOF
-  }
-  provisioner "local-exec" {
-    when    = "destroy"
-    interpreter = ["timeout", "300", "bash", "-c"]
-    command = <<EOF
-      if [ -z "$(az extension list | jq -r '.[] | select(.name == "aks-preview")')" ]; then
-        az extension add -n aks-preview -y
-      else
-        az extension update -n aks-preview || true
-      fi
-
-      az aks update \
-        --resource-group ${var.resource_group} \
-        --name ${var.cluster_name} \
-        --api-server-authorized-ip-ranges ""
-    EOF
-  }
 }
 
 ########################################################
@@ -128,7 +82,7 @@ resource "azurerm_storage_account" "legion_data" {
   }
 
   tags       = local.storage_tags
-  depends_on = [null_resource.secure_kube_api]
+  depends_on = [azurerm_container_registry.legion]
 }
 
 data "azurerm_storage_account_sas" "legion" {
